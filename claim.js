@@ -1,7 +1,8 @@
 const axios = require('axios');
+require('dotenv').config();
 
 const API_URL = 'https://www.magicnewton.com/portal/api/userQuests';
-const AUTH_TOKEN = 'Bearer eyJBUElfS0VZIjoicGtfbGl2ZV9DMTgxOUQ1OUY1REZCOEUyIiwiRE9NQUlOX09SSUdJTiI6Imh0dHBzOi8vd3d3Lm1hZ2ljbmV3dG9uLmNvbSIsImhvc3QiOiJhdXRoLm1hZ2ljLmxpbmsiLCJzZGsiOiJtYWdpYy1zZGsiLCJ2ZXJzaW9uIjoiMjguMjEuMCIsImxvY2FsZSI6ImVuX1VTIn0='; // Ganti dengan tokenmu
+const AUTH_TOKEN = `Bearer ${process.env.AUTH_TOKEN}`; // Ambil token dari .env
 
 async function claimQuest() {
     try {
