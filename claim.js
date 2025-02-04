@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const API_URL = 'https://www.magicnewton.com/portal/api/userQuests';
-const AUTH_TOKEN = 'Bearer eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..NqsAJrZWRErcv9hY.xxPaU7Kkn42nKebLSJBzaq5BUxu8NtcoV2OzS4kUz8tBy5IUQ48UpaoqjRflqzPKgGR8vUH6DMZAS2DfLNufSRaMBULyjMl11yumeRSjXOk_Tehn66gS5sihWMni1W4uKWvjkbs2FlOgNS2N3b2-fbciZOSdhFB_1lVKdLFlfn2UR4asDlQZrTXtP6fWqN27b1Rii7rb3PglbvNOwixaVNey2rPyucAHNeyrdjfqkWHESDATOHTO8dDB6QCc36sL.35u76nbo6BPCUHugpR9oIA'; // Ganti dengan tokenmu
+const AUTH_TOKEN = 'Bearer eyJBUElfS0VZIjoicGtfbGl2ZV9DMTgxOUQ1OUY1REZCOEUyIiwiRE9NQUlOX09SSUdJTiI6Imh0dHBzOi8vd3d3Lm1hZ2ljbmV3dG9uLmNvbSIsImhvc3QiOiJhdXRoLm1hZ2ljLmxpbmsiLCJzZGsiOiJtYWdpYy1zZGsiLCJ2ZXJzaW9uIjoiMjguMjEuMCIsImxvY2FsZSI6ImVuX1VTIn0='; // Ganti dengan tokenmu
 
 async function claimQuest() {
     try {
