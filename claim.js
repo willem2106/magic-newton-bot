@@ -2,33 +2,30 @@ require('dotenv').config();
 const axios = require('axios');
 
 const loginUrl = 'https://www.magicnewton.com/portal/api/auth/session';
-const privateKey = process.env.PRIVATE_KEY;
 
-if (!privateKey) {
-    console.error("❌ Private Key tidak ditemukan. Pastikan file .env telah diisi.");
+// Ambil cookie dari .env
+const sessionCookie = process.env.SESSION_COOKIE;
+
+if (!sessionCookie) {
+    console.error("❌ Cookie sesi tidak ditemukan. Pastikan file .env telah diisi dengan SESSION_COOKIE.");
     process.exit(1);
 }
 
 const login = async () => {
-    console.log("\n⏳ Memulai proses login ke MagicNewton...");
+    console.log("\n⏳ Memulai proses login ke MagicNewton menggunakan cookie...");
 
     try {
-        // Debugging: Menampilkan payload yang dikirim
-        const payload = { private_key: privateKey };
-        console.log("🔹 Payload yang dikirim:", payload);
-
-        const response = await axios.post(loginUrl, payload, {
+        const response = await axios.get(loginUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0',
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Cookie': `__Secure-next-auth.session-token=${sessionCookie}`
             }
         });
 
-        console.log("🔍 Debug Response Data:", response.data); // Debug respons API
-
-        if (response.status === 200 && response.data.session_token) {
-            console.log(`✅ Login berhasil! Token sesi: ${response.data.session_token}`);
+        if (response.status === 200) {
+            console.log("✅ Login berhasil!");
 
             // Preview user info jika tersedia
             if (response.data.user) {
@@ -39,15 +36,11 @@ const login = async () => {
             } else {
                 console.log("⚠️ User info tidak ditemukan dalam response.");
             }
-
         } else {
             console.error(`⚠️ Login gagal, status: ${response.status}`);
         }
     } catch (error) {
-        console.error("❌ Terjadi kesalahan saat login.");
-        console.log("🔍 Response Data:", error.response?.data || error.message);
-        console.log("🔍 Response Status:", error.response?.status || "Tidak ada status");
-        console.log("🔍 Response Headers:", error.response?.headers || "Tidak ada headers");
+        console.error("❌ Terjadi kesalahan saat login:", JSON.stringify(error.response?.data || error.message, null, 2));
     }
 };
 
