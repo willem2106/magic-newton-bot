@@ -26,7 +26,7 @@ const login = async () => {
             }
         );
 
-        console.log("🔍 Debug Response:", response.data); // Debug response
+        console.log("🔍 Debug Response:", JSON.stringify(response.data, null, 2)); // Debugging response
 
         if (response.status === 200 && response.data.session_token) {
             console.log(`✅ Login berhasil! Token sesi: ${response.data.session_token}`);
@@ -45,7 +45,7 @@ const login = async () => {
             console.error(`⚠️ Login gagal, status: ${response.status}`);
         }
     } catch (error) {
-        console.error("❌ Terjadi kesalahan saat login:", error.response?.data || error.message || error);
+        console.error("❌ Terjadi kesalahan saat login:", JSON.stringify(error.response?.data, null, 2) || error.message || error);
     }
 };
 
