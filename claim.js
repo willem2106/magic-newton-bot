@@ -41,7 +41,8 @@ const login = async () => {
             console.error(`⚠️ Login gagal, status: ${response.status}`);
         }
     } catch (error) {
-        console.error(`❌ Terjadi kesalahan saat login:`, error.response?.data || error.message);
+    console.error("❌ Terjadi kesalahan saat login:", error.response?.data || error.message || error);
+     }
     }
 };
 
