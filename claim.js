@@ -12,6 +12,7 @@ if (!sessionCookie) {
     process.exit(1);
 }
 
+// Fungsi untuk mendapatkan data user
 const getUserInfo = async () => {
     console.log("\n⏳ Mengambil informasi user dari MagicNewton...");
 
@@ -27,24 +28,24 @@ const getUserInfo = async () => {
 
         console.log("✅ Data user berhasil diperoleh!");
 
-        // Cetak seluruh response untuk debugging
-        console.log("\n🔍 **Full User Response Data:**");
-        console.log(JSON.stringify(response.data, null, 2));
+        // Simpan data user
+        const userData = {
+            id: response.data.id || "Tidak tersedia",
+            name: response.data.name || "Tidak tersedia",
+            email: response.data.email || "Tidak tersedia",
+            refCode: response.data.refCode || "Tidak tersedia"
+        };
 
-        // Pastikan data user tersedia
-        if (response.data) {
-            console.log("\n👤 **User Info:**");
-            console.log(`   🔹 Nama: ${response.data.name || "Tidak tersedia"}`);
-            console.log(`   🔹 Email: ${response.data.email || "Tidak tersedia"}`);
-            console.log(`   🔹 ID: ${response.data.id || "Tidak tersedia (cek struktur respons)"}`);
-        } else {
-            console.log("⚠️ Data user tidak ditemukan dalam respons.");
-        }
+        // Menampilkan preview data user
+        console.log("\n📌 **Preview Data User:**");
+        console.log(JSON.stringify(userData, null, 2));
+
     } catch (error) {
         console.error("❌ Terjadi kesalahan saat mengambil data user:", JSON.stringify(error.response?.data || error.message, null, 2));
     }
 };
 
+// Fungsi untuk login ke MagicNewton
 const login = async () => {
     console.log("\n⏳ Memulai proses login ke MagicNewton menggunakan cookie...");
 
@@ -59,11 +60,12 @@ const login = async () => {
         });
 
         console.log("✅ Login berhasil!");
-        await getUserInfo(); // Ambil user info setelah login
+        await getUserInfo(); // Panggil fungsi untuk mendapatkan info user setelah login
 
     } catch (error) {
         console.error("❌ Terjadi kesalahan saat login:", JSON.stringify(error.response?.data || error.message, null, 2));
     }
 };
 
+// Jalankan fungsi login
 login();
