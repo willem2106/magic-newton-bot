@@ -33,6 +33,17 @@ async function login() {
 
         if (response.status === 200) {
             console.log(`✅ [${getCurrentTimestamp()}] Login Berhasil!`);
+
+            // Menampilkan preview user jika tersedia
+            const userData = response.data?.user;
+            if (userData) {
+                console.log(`👤 User Info:`);
+                console.log(`   🏷️ Name   : ${userData.name || 'Tidak tersedia'}`);
+                console.log(`   📍 Address: ${userData.address || 'Tidak tersedia'}`);
+            } else {
+                console.log(`⚠️ Data user tidak ditemukan.`);
+            }
+
         } else {
             console.log(`⚠️ [${getCurrentTimestamp()}] Login mungkin gagal. Status: ${response.status}`);
         }
