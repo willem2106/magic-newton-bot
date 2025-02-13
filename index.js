@@ -21,25 +21,23 @@ function getCurrentTimestamp() {
 async function login() {
     console.log(`🕒 [${getCurrentTimestamp()}] Memulai proses login...`);
 
-    if (!COOKIE) {
-        console.error("❌ [ERROR] COOKIE tidak ditemukan. Pastikan COOKIE tersedia di .env");
-        return;
-    }
-
     try {
         const response = await axios.get(LOGIN_API, {
             headers: {
                 'Cookie': COOKIE,
                 'User-Agent': 'Mozilla/5.0',
-                'Referer': 'https://www.magicnewton.com/portal',
-                'Origin': 'https://www.magicnewton.com'
+                'Referer': 'https://www.magicnewton/portal',
+                'Origin': 'https://www.magicnewton/portal'
             }
         });
 
-        if (response.status === 200 && response.data) {
+        if (response.status === 200) {
             console.log(`✅ [${getCurrentTimestamp()}] Login Berhasil!`);
 
-            // Menampilkan preview user jika tersedia
+            // Debug: Cetak isi lengkap response.data untuk melihat strukturnya
+            console.log(`🔍 Response Data Lengkap:`, JSON.stringify(response.data, null, 2));
+
+            // Cek apakah ada data user
             const userData = response.data?.user;
             if (userData) {
                 console.log(`👤 User Info:`);
@@ -53,10 +51,7 @@ async function login() {
             console.log(`⚠️ [${getCurrentTimestamp()}] Login mungkin gagal. Status: ${response.status}`);
         }
     } catch (error) {
-        console.error(
-            `❌ [${getCurrentTimestamp()}] Login Gagal:`,
-            error.response?.data || error.message || error.code
-        );
+        console.error(`❌ [${getCurrentTimestamp()}] Login Gagal:`, error.response ? error.response.data : error.message);
     }
 }
 
