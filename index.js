@@ -2,9 +2,10 @@ require('dotenv').config();
 const axios = require('axios');
 const moment = require('moment-timezone');
 require('colors');
-const { displayHeader } = require('./helpers'); // Pastikan helpers.js ada dan memiliki fungsi displayHeader
+const { displayHeader } = require('./helpers'); // Import fungsi displayHeader
 
-const LOGIN_API = 'https://www.magicnewton.com/portal/api/auth/session'; // Pastikan URL benar
+const LOGIN_API = 'https://www.magicnewton.com/portal/api/auth/session';
+const QUESTS_API = 'https://www.magicnewton.com/portal/api/quests';
 const COOKIE = process.env.COOKIE;
 const WAIT_TIME = 24 * 60 * 60 * 1000; // 24 jam dalam milidetik
 
@@ -26,27 +27,14 @@ async function login() {
             headers: {
                 'Cookie': COOKIE,
                 'User-Agent': 'Mozilla/5.0',
-                'Referer': 'https://www.magicnewton/portal',
-                'Origin': 'https://www.magicnewton/portal'
+                'Referer': 'https://www.magicnewton.com/portal',
+                'Origin': 'https://www.magicnewton.com/portal'
             }
         });
 
         if (response.status === 200) {
             console.log(`✅ [${getCurrentTimestamp()}] Login Berhasil!`);
-
-            // Debug: Cetak isi lengkap response.data untuk melihat strukturnya
-            console.log(`🔍 Response Data Lengkap:`, JSON.stringify(response.data, null, 2));
-
-            // Cek apakah ada data user
-            const userData = response.data?.user;
-            if (userData) {
-                console.log(`👤 User Info:`);
-                console.log(`   🏷️ Name   : ${userData.name || 'Tidak tersedia'}`);
-                console.log(`   📍 Address: ${userData.address || 'Tidak tersedia'}`);
-            } else {
-                console.log(`⚠️ Data user tidak ditemukan.`);
-            }
-
+            await fetchAndCompleteQuests();
         } else {
             console.log(`⚠️ [${getCurrentTimestamp()}] Login mungkin gagal. Status: ${response.status}`);
         }
@@ -55,7 +43,56 @@ async function login() {
     }
 }
 
-// Fungsi utama untuk menjalankan login setiap 24 jam
+async function fetchAndCompleteQuests() {
+    try {
+        console.log(`📜 [${getCurrentTimestamp()}] Mengambil daftar quests...`);
+        const response = await axios.get(QUESTS_API, {
+            headers: {
+                'Cookie': COOKIE,
+                'User-Agent': 'Mozilla/5.0',
+                'Referer': 'https://www.magicnewton.com/portal',
+                'Origin': 'https://www.magicnewton.com/portal'
+            }
+        });
+
+        if (response.status === 200 && Array.isArray(response.data)) {
+            const quests = response.data;
+            
+            console.log(`📝 [${getCurrentTimestamp()}] Daftar Quest:`);
+            quests.forEach(quest => {
+                console.log(`   🔹 ID: ${quest.id}, Judul: ${quest.title}`);
+            });
+
+            await completeQuests(quests);
+        } else {
+            console.log(`⚠️ [${getCurrentTimestamp()}] Gagal mengambil daftar quests.`);
+        }
+    } catch (error) {
+        console.error(`❌ [${getCurrentTimestamp()}] Gagal mengambil quest:`, error.response ? error.response.data : error.message);
+    }
+}
+
+async function completeQuests(quests) {
+    for (const quest of quests) {
+        try {
+            console.log(`🚀 [${getCurrentTimestamp()}] Menyelesaikan quest: ${quest.title} (ID: ${quest.id})...`);
+            await axios.post(QUESTS_API, { id: quest.id }, {
+                headers: {
+                    'Cookie': COOKIE,
+                    'User-Agent': 'Mozilla/5.0',
+                    'Referer': 'https://www.magicnewton.com/portal',
+                    'Origin': 'https://www.magicnewton.com/portal'
+                }
+            });
+
+            console.log(`✅ [${getCurrentTimestamp()}] Quest "${quest.title}" selesai!`);
+        } catch (error) {
+            console.error(`❌ [${getCurrentTimestamp()}] Gagal menyelesaikan quest "${quest.title}":`, error.response ? error.response.data : error.message);
+        }
+    }
+}
+
+// Fungsi utama untuk menjalankan login dan quest setiap 24 jam
 async function startRoutine() {
     try {
         displayHeader();
@@ -64,14 +101,11 @@ async function startRoutine() {
         console.error(`🚨 [${getCurrentTimestamp()}] Terjadi error dalam eksekusi script:`, error);
     }
 
-    // Menampilkan waktu eksekusi berikutnya dalam format lengkap
     const nextRun = moment().tz('Asia/Jakarta').add(24, 'hours').format('DD/MM/YYYY, HH:mm:ss');
     console.log(`\n⏳ [${getCurrentTimestamp()}] Menunggu 24 jam untuk menjalankan ulang pada: ${nextRun} WIB\n`);
 
-    // Tunggu 24 jam sebelum menjalankan ulang
     await new Promise(resolve => setTimeout(resolve, WAIT_TIME));
 
-    // Jalankan ulang
     await startRoutine();
 }
 
