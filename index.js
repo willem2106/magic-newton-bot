@@ -5,8 +5,8 @@ require('colors');
 const { displayHeader } = require('./helpers');
 
 const MAGICNEWTON_URL = "https://www.magicnewton.com/portal/rewards";
-const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 jam
-const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // 5-10 menit delay acak
+const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 hours
+const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // Random delay between 5-10 minutes
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,12 +27,12 @@ function loadData(file) {
   try {
     const datas = fs.readFileSync(file, "utf8").replace(/\r/g, "").split("\n").filter(Boolean);
     if (datas?.length <= 0) {
-      console.log(colors.red(`${getCurrentTime()} - Tidak ditemukan data di file ${file}`));
+      console.log(colors.red(`${getCurrentTime()} - No data found in the file ${file}`));
       return [];
     }
     return datas;
   } catch (error) {
-    console.log(`${getCurrentTime()} - File ${file} tidak ditemukan`.red);
+    console.log(`${getCurrentTime()} - File ${file} not found`.red);
     return [];
   }
 }
@@ -47,11 +47,11 @@ async function runAccount(cookie) {
     await page.setCookie(cookie);
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-    const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Tidak diketahui");
-    console.log(`${getCurrentTime()} - 🏠 Alamat terdeteksi: ${userAddress}`);
+    const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 🏠 Your Accounts: ${userAddress}`);
 
-    let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
-    console.log(`${getCurrentTime()} - 💰 Saldo saat ini: ${userCredits}`);
+    let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 💰 Total Your Points: ${userCredits}`);
 
     await page.waitForSelector("button", { timeout: 30000 });
     const rollNowClicked = await page.$$eval("button", (buttons) => {
@@ -64,7 +64,7 @@ async function runAccount(cookie) {
     });
 
     if (rollNowClicked) {
-      console.log(`${getCurrentTime()} - ✅ Memulai roll harian...`);
+      console.log(`${getCurrentTime()} - ✅ Starting daily roll...`);
     }
     await delay(5000);
 
@@ -89,30 +89,30 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Menunggu 60 detik untuk animasi dadu...`);
+        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
         await delay(60000);
-        userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
-        console.log(`${getCurrentTime()} - 💰 Saldo terbaru: ${userCredits}`);
+        userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
+        console.log(`${getCurrentTime()} - 💰 Latest balance: ${userCredits}`);
       } else {
-        console.log(`${getCurrentTime()} - ⚠️ Tombol 'Throw Dice' tidak ditemukan.`);
+        console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
     } else {
-      console.log(`${getCurrentTime()} - ⚠️ Tidak bisa roll saat ini. Coba lagi nanti.`);
+      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later.`);
     }
     await browser.close();
   } catch (error) {
-    console.error(`${getCurrentTime()} - ❌ Terjadi kesalahan:`, error);
+    console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
   }
 }
 
 (async () => {
   console.clear();
-  console.log(`${getCurrentTime()} - 🚀 Memulai Bot Puppeteer...`);
+  console.log(`${getCurrentTime()} - 🚀 Starting Magicnewton bot...`);
   const data = loadData("data.txt");
 
   while (true) {
     try {
-      console.log(`${getCurrentTime()} - 🔄 Memulai siklus baru...`);
+      console.log(`${getCurrentTime()} - 🔄 Starting your account...`);
       for (let i = 0; i < data.length; i++) {
         const cookie = {
           name: "__Secure-next-auth.session-token",
@@ -125,10 +125,10 @@ async function runAccount(cookie) {
         await runAccount(cookie);
       }
     } catch (error) {
-      console.error(`${getCurrentTime()} - ❌ Terjadi kesalahan:`, error);
+      console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`${getCurrentTime()} - 🔄 Siklus selesai. Tidur selama 24 jam + delay acak ${extraDelay / 60000} menit...`);
+    console.log(`${getCurrentTime()} - 🔄 Daily roll completed, Sleeping for 24 hours + random delay of ${extraDelay / 60000} minutes...`);
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
