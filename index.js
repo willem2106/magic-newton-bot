@@ -12,9 +12,9 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function getCurrentTimestamp() {
+function getCurrentTime() {
   const now = new Date();
-  return now.toISOString().replace("T", " ").split(".")[0]; // Format YYYY-MM-DD HH:MM:SS
+  return now.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }); // Sesuaikan dengan zona waktu Anda
 }
 
 function loadData(file) {
