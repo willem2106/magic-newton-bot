@@ -5,8 +5,8 @@ require('colors');
 const { displayHeader } = require('./helpers');
 
 const MAGICNEWTON_URL = "https://www.magicnewton.com/portal/rewards";
-const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 hours
-const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // 20-60 mins random delay
+const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 jam
+const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // 5-10 menit delay acak
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,71 +16,31 @@ function loadData(file) {
   try {
     const datas = fs.readFileSync(file, "utf8").replace(/\r/g, "").split("\n").filter(Boolean);
     if (datas?.length <= 0) {
-      console.log(colors.red(`Không tìm thấy dữ liệu ${file}`));
+      console.log(colors.red(`Tidak ditemukan data di file ${file}`));
       return [];
     }
     return datas;
   } catch (error) {
-    console.log(`Không tìm thấy file ${file}`.red);
+    console.log(`File ${file} tidak ditemukan`.red);
     return [];
   }
 }
 
-function parseTimeString(timeStr) {
-  const parts = timeStr.split(":").map(Number);
-  if (parts.length !== 3) return null;
-  return {
-    hours: parts[0],
-    minutes: parts[1],
-    seconds: parts[2],
-    totalMs: (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000,
-  };
-}
-
-async function showLiveCountdown(totalMs) {
-  while (totalMs > 0) {
-    const hours = Math.floor(totalMs / (1000 * 60 * 60));
-    const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
-    readline.clearLine(process.stdout, 0);
-    readline.cursorTo(process.stdout, 0);
-    process.stdout.write(`⏳ Next roll available in: ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")} `);
-    await delay(1000);
-    totalMs -= 1000;
-  }
-  console.log("\n✅ Time reached! Retrying roll...");
-}
-
-async function runAccount(cookie, proxy) {
+async function runAccount(cookie) {
   try {
-    const [username, password, ip, port] = proxy.replace("http://", "").replace("@", ":").split(":");
-    // console.log(username, pass, ip, port);
-    // process.exit(0);
-
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
-    // await page.authenticate({ username, password });
-    // if (fs.existsSync("cookies.json")) {
-    //   const cookies = JSON.parse(fs.readFileSync("cookies.json"));
-    //   console.log(cookies);
-    //   await page.setCookie(...cookies);
-    //   console.log("✅ Cookies loaded successfully. \n⏳ Webpage Loading: may take up to 60 secs...");
-    // } else {
-    //   console.log("❌ Cookies file not found. Please run the login step first.");
-    //   await browser.close();
-    //   return;
-    // }
     await page.setCookie(cookie);
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-    const userEmail = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Unknown");
-    console.log(`📧 Logged in as: ${userEmail}`);
+    const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Tidak diketahui");
+console.log(`🏠 Alamat terdeteksi: ${userAddress}`);
 
-    let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
-    console.log(`💰 Current Credits: ${userCredits}`);
+    let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
+    console.log(`💰 Saldo saat ini: ${userCredits}`);
 
     await page.waitForSelector("button", { timeout: 30000 });
     const rollNowClicked = await page.$$eval("button", (buttons) => {
@@ -93,7 +53,7 @@ async function runAccount(cookie, proxy) {
     });
 
     if (rollNowClicked) {
-      console.log("✅ 'Starting roll daily...");
+      console.log("✅ Memulai roll harian...");
     }
     await delay(5000);
 
@@ -118,48 +78,30 @@ async function runAccount(cookie, proxy) {
       });
 
       if (throwDiceClicked) {
-        // console.log("✅ 'Throw Dice' button clicked!");
-        console.log("⏳ Waiting 60 seconds for dice animation...");
+        console.log("⏳ Menunggu 60 detik untuk animasi dadu...");
         await delay(60000);
-        userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
-        console.log(`💰 Updated Credits: ${userCredits}`);
+        userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
+        console.log(`💰 Saldo terbaru: ${userCredits}`);
       } else {
-        console.log("⚠️ 'Throw Dice' button not found.");
+        console.log("⚠️ Tombol 'Throw Dice' tidak ditemukan.");
       }
     } else {
-      const timerText = await page.evaluate(() => {
-        const h2Elements = Array.from(document.querySelectorAll("h2"));
-        for (let h2 of h2Elements) {
-          const text = h2.innerText.trim();
-          if (/^\d{2}:\d{2}:\d{2}$/.test(text)) {
-            return text;
-          }
-        }
-        return null;
-      });
-
-      if (timerText) {
-        console.log(`⏱ Time Left until next ROLL: ${timerText}`);
-      } else {
-        console.log("⚠️ No timer found. Using default sleep time.");
-      }
+      console.log("⚠️ Tidak bisa roll saat ini. Coba lagi nanti.");
     }
     await browser.close();
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Terjadi kesalahan:", error);
   }
 }
 
 (async () => {
   console.clear();
-  console.log(`Tool được phát triển bởi nhóm telegram: https://t.me/airdrophuntersieutoc`);
-  console.log("🚀 Starting Puppeteer Bot...");
+  console.log("🚀 Memulai Bot Puppeteer...");
   const data = loadData("data.txt");
-  const proxies = loadData("proxy.txt");
 
   while (true) {
     try {
-      console.log("🔄 New cycle started...");
+      console.log("🔄 Memulai siklus baru...");
       for (let i = 0; i < data.length; i++) {
         const cookie = {
           name: "__Secure-next-auth.session-token",
@@ -169,15 +111,13 @@ async function runAccount(cookie, proxy) {
           secure: true,
           httpOnly: true,
         };
-        const proxy = proxies[i];
-        const [username, password, ip, port] = proxy.replace("http://", "").replace("@", ":").split(":");
-        await runAccount(cookie, proxy);
+        await runAccount(cookie);
       }
     } catch (error) {
-      console.error("❌ Error:", error);
+      console.error("❌ Terjadi kesalahan:", error);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`🔄 Cycle complete. Sleeping for 24 hours + random delay of ${extraDelay / 60000} minutes...`);
-    await delay(DEFAULT_SLEEP_TIME);
+    console.log(`🔄 Siklus selesai. Tidur selama 24 jam + delay acak ${extraDelay / 60000} menit...`);
+    await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
