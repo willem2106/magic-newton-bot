@@ -42,15 +42,15 @@ async function fetchAndCompleteDailyDiceRoll() {
             headers: { 'Cookie': COOKIE, 'User-Agent': 'Mozilla/5.0' }
         });
         
-        console.log("📡 Response dari server:", response.data); // Debugging output
+        console.log("📡 Response dari server:", JSON.stringify(response.data, null, 2)); // Debugging output
 
-        if (response.status === 200 && response.data && Array.isArray(response.data)) {
-            const quests = response.data;
+        if (response.status === 200 && response.data && Array.isArray(response.data.data)) {
+            const quests = response.data.data;
             const diceRollQuest = quests.find(q => q.questId === "f56c760b-2186-40cb-9cbc-3af4a3dc20e2");
             
             if (diceRollQuest) {
                 console.log(`🎯 Ditemukan Daily Dice Roll:`, diceRollQuest);
-                await completeQuest(diceRollQuest.id, "Daily Dice Roll");
+                await completeQuest(diceRollQuest.id, diceRollQuest.credits, diceRollQuest.createdAt);
             } else {
                 console.log(`⚠️ [${getCurrentTimestamp()}] Daily Dice Roll tidak ditemukan atau sudah diklaim.`);
             }
@@ -62,15 +62,16 @@ async function fetchAndCompleteDailyDiceRoll() {
     }
 }
 
-async function completeQuest(questId, title) {
+async function completeQuest(questId, credits, createdAt) {
     try {
         console.log(`🎲 [${getCurrentTimestamp()}] Menjalankan Daily Dice Roll (ID: ${questId})...`);
         await axios.post(QUESTS_API, { id: questId }, {
             headers: { 'Cookie': COOKIE, 'User-Agent': 'Mozilla/5.0' }
         });
-        console.log(`✅ [${getCurrentTimestamp()}] Quest "${title}" selesai!`);
+        console.log(`✅ [${getCurrentTimestamp()}] Quest "Daily Dice Roll" selesai!`);
+        console.log(`🏆 Points Earned: ${credits} | 📅 Roll Date: ${createdAt}`);
     } catch (error) {
-        console.error(`❌ [${getCurrentTimestamp()}] Gagal menyelesaikan quest "${title}":`, error.response ? error.response.data : error.message);
+        console.error(`❌ [${getCurrentTimestamp()}] Gagal menyelesaikan quest "Daily Dice Roll":`, error.response ? error.response.data : error.message);
     }
 }
 
