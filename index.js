@@ -12,16 +12,27 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function getCurrentTime() {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+}
+
 function loadData(file) {
   try {
     const datas = fs.readFileSync(file, "utf8").replace(/\r/g, "").split("\n").filter(Boolean);
     if (datas?.length <= 0) {
-      console.log(colors.red(`Tidak ditemukan data di file ${file}`));
+      console.log(colors.red(`${getCurrentTime()} - Tidak ditemukan data di file ${file}`));
       return [];
     }
     return datas;
   } catch (error) {
-    console.log(`File ${file} tidak ditemukan`.red);
+    console.log(`${getCurrentTime()} - File ${file} tidak ditemukan`.red);
     return [];
   }
 }
@@ -37,10 +48,10 @@ async function runAccount(cookie) {
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
     const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Tidak diketahui");
-    console.log(`🏠 Alamat terdeteksi: ${userAddress}`);
+    console.log(`${getCurrentTime()} - 🏠 Alamat terdeteksi: ${userAddress}`);
 
     let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
-    console.log(`💰 Saldo saat ini: ${userCredits}`);
+    console.log(`${getCurrentTime()} - 💰 Saldo saat ini: ${userCredits}`);
 
     await page.waitForSelector("button", { timeout: 30000 });
     const rollNowClicked = await page.$$eval("button", (buttons) => {
@@ -53,7 +64,7 @@ async function runAccount(cookie) {
     });
 
     if (rollNowClicked) {
-      console.log("✅ Memulai roll harian...");
+      console.log(`${getCurrentTime()} - ✅ Memulai roll harian...`);
     }
     await delay(5000);
 
@@ -78,30 +89,30 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log("⏳ Menunggu 60 detik untuk animasi dadu...");
+        console.log(`${getCurrentTime()} - ⏳ Menunggu 60 detik untuk animasi dadu...`);
         await delay(60000);
         userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
-        console.log(`💰 Saldo terbaru: ${userCredits}`);
+        console.log(`${getCurrentTime()} - 💰 Saldo terbaru: ${userCredits}`);
       } else {
-        console.log("⚠️ Tombol 'Throw Dice' tidak ditemukan.");
+        console.log(`${getCurrentTime()} - ⚠️ Tombol 'Throw Dice' tidak ditemukan.`);
       }
     } else {
-      console.log("⚠️ Tidak bisa roll saat ini. Coba lagi nanti.");
+      console.log(`${getCurrentTime()} - ⚠️ Tidak bisa roll saat ini. Coba lagi nanti.`);
     }
     await browser.close();
   } catch (error) {
-    console.error("❌ Terjadi kesalahan:", error);
+    console.error(`${getCurrentTime()} - ❌ Terjadi kesalahan:`, error);
   }
 }
 
 (async () => {
-  displayHeader(); // Memastikan header muncul sebelum bot dijalankan
-  console.log("🚀 Memulai Bot Puppeteer...");
+  console.clear();
+  console.log(`${getCurrentTime()} - 🚀 Memulai Bot Puppeteer...`);
   const data = loadData("data.txt");
 
   while (true) {
     try {
-      console.log("🔄 Memulai siklus baru...");
+      console.log(`${getCurrentTime()} - 🔄 Memulai siklus baru...`);
       for (let i = 0; i < data.length; i++) {
         const cookie = {
           name: "__Secure-next-auth.session-token",
@@ -114,10 +125,10 @@ async function runAccount(cookie) {
         await runAccount(cookie);
       }
     } catch (error) {
-      console.error("❌ Terjadi kesalahan:", error);
+      console.error(`${getCurrentTime()} - ❌ Terjadi kesalahan:`, error);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`🔄 Siklus selesai. Tidur selama 24 jam + delay acak ${extraDelay / 60000} menit...`);
+    console.log(`${getCurrentTime()} - 🔄 Siklus selesai. Tidur selama 24 jam + delay acak ${extraDelay / 60000} menit...`);
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
