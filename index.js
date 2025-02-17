@@ -1,111 +1,183 @@
-require('dotenv').config();
-const axios = require('axios');
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const moment = require('moment-timezone');
-const readline = require('readline');
-const MAGICNEWTON_URL = 'https://www.magicnewton.com/portal/rewards';
-const QUESTS_API = 'https://www.magicnewton.com/portal/api/userQuests';
-const COOKIE = process.env.COOKIE;
-const WAIT_TIME = 24 * 60 * 60 * 1000;
+const puppeteer = require("puppeteer");
+const fs = require("fs");
+const readline = require("readline");
+require('colors');
+const { displayHeader } = require('./helpers');
 
-async function getCurrentTimestamp() {
-    return moment().tz('Asia/Jakarta').format('DD/MM/YYYY, HH:mm:ss');
+const MAGICNEWTON_URL = "https://www.magicnewton.com/portal/rewards";
+const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 hours
+const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // 20-60 mins random delay
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchDailyDiceRollQuest() {
-    try {
-        console.log(`📜 [${await getCurrentTimestamp()}] Mengambil daftar quests...`);
-        const response = await axios.get(QUESTS_API, {
-            headers: { 'Cookie': COOKIE }
-        });
+function loadData(file) {
+  try {
+    const datas = fs.readFileSync(file, "utf8").replace(/\r/g, "").split("\n").filter(Boolean);
+    if (datas?.length <= 0) {
+      console.log(colors.red(`Không tìm thấy dữ liệu ${file}`));
+      return [];
+    }
+    return datas;
+  } catch (error) {
+    console.log(`Không tìm thấy file ${file}`.red);
+    return [];
+  }
+}
 
-        if (response.status === 200 && Array.isArray(response.data)) {
-            const quests = response.data;
-            const dailyDiceRollQuest = quests.find(q => q.title === 'Daily Dice Roll');
-            if (dailyDiceRollQuest) {
-                console.log(`🎲 Quest ditemukan: ${dailyDiceRollQuest.title}`);
-                return dailyDiceRollQuest;
-            } else {
-                console.log(`⚠️ Daily Dice Roll tidak ditemukan.`);
-            }
+function parseTimeString(timeStr) {
+  const parts = timeStr.split(":").map(Number);
+  if (parts.length !== 3) return null;
+  return {
+    hours: parts[0],
+    minutes: parts[1],
+    seconds: parts[2],
+    totalMs: (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000,
+  };
+}
+
+async function showLiveCountdown(totalMs) {
+  while (totalMs > 0) {
+    const hours = Math.floor(totalMs / (1000 * 60 * 60));
+    const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((totalMs % (1000 * 60)) / 1000);
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
+    process.stdout.write(`⏳ Next roll available in: ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")} `);
+    await delay(1000);
+    totalMs -= 1000;
+  }
+  console.log("\n✅ Time reached! Retrying roll...");
+}
+
+async function runAccount(cookie, proxy) {
+  try {
+    const [username, password, ip, port] = proxy.replace("http://", "").replace("@", ":").split(":");
+    // console.log(username, pass, ip, port);
+    // process.exit(0);
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    // await page.authenticate({ username, password });
+    // if (fs.existsSync("cookies.json")) {
+    //   const cookies = JSON.parse(fs.readFileSync("cookies.json"));
+    //   console.log(cookies);
+    //   await page.setCookie(...cookies);
+    //   console.log("✅ Cookies loaded successfully. \n⏳ Webpage Loading: may take up to 60 secs...");
+    // } else {
+    //   console.log("❌ Cookies file not found. Please run the login step first.");
+    //   await browser.close();
+    //   return;
+    // }
+    await page.setCookie(cookie);
+    await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
+
+    const userEmail = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Unknown");
+    console.log(`📧 Logged in as: ${userEmail}`);
+
+    let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
+    console.log(`💰 Current Credits: ${userCredits}`);
+
+    await page.waitForSelector("button", { timeout: 30000 });
+    const rollNowClicked = await page.$$eval("button", (buttons) => {
+      const target = buttons.find((btn) => btn.innerText && btn.innerText.includes("Roll now"));
+      if (target) {
+        target.click();
+        return true;
+      }
+      return false;
+    });
+
+    if (rollNowClicked) {
+      console.log("✅ 'Starting roll daily...");
+    }
+    await delay(5000);
+
+    const letsRollClicked = await page.$$eval("button", (buttons) => {
+      const target = buttons.find((btn) => btn.innerText && btn.innerText.includes("Let's roll"));
+      if (target) {
+        target.click();
+        return true;
+      }
+      return false;
+    });
+
+    if (letsRollClicked) {
+      await delay(5000);
+      const throwDiceClicked = await page.$$eval("button", (buttons) => {
+        const target = buttons.find((btn) => btn.innerText && btn.innerText.includes("Throw Dice"));
+        if (target) {
+          target.click();
+          return true;
         }
-    } catch (error) {
-        console.error(`❌ Gagal mengambil quest:`, error.response ? error.response.data : error.message);
-    }
-    return null;
-}
+        return false;
+      });
 
-async function completeDailyDiceRollQuest(quest) {
-    try {
-        console.log(`🚀 Menyelesaikan quest: ${quest.title} (ID: ${quest.id})...`);
-        await axios.post(QUESTS_API, { id: quest.id }, {
-            headers: { 'Cookie': COOKIE }
-        });
-        console.log(`✅ Quest "${quest.title}" selesai!`);
-    } catch (error) {
-        console.error(`❌ Gagal menyelesaikan quest:`, error.response ? error.response.data : error.message);
-    }
-}
-
-async function runPuppeteer() {
-    try {
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-        const page = await browser.newPage();
-        await page.setCookie({ name: '__Secure-next-auth.session-token', value: COOKIE, domain: '.magicnewton.com', path: '/', secure: true, httpOnly: true });
-        await page.goto(MAGICNEWTON_URL, { waitUntil: 'networkidle2' });
-
-        console.log(`📧 Logged in to MagicNewton`);
-        const rollNowClicked = await page.$$eval('button', buttons => {
-            const btn = buttons.find(b => b.innerText.includes('Roll now'));
-            if (btn) btn.click();
-            return !!btn;
-        });
-
-        if (rollNowClicked) {
-            console.log('🎲 Starting daily roll...');
-            await page.waitForTimeout(5000);
-            const letsRollClicked = await page.$$eval('button', buttons => {
-                const btn = buttons.find(b => b.innerText.includes("Let's roll"));
-                if (btn) btn.click();
-                return !!btn;
-            });
-
-            if (letsRollClicked) {
-                await page.waitForTimeout(5000);
-                const throwDiceClicked = await page.$$eval('button', buttons => {
-                    const btn = buttons.find(b => b.innerText.includes('Throw Dice'));
-                    if (btn) btn.click();
-                    return !!btn;
-                });
-
-                if (throwDiceClicked) {
-                    console.log('⏳ Waiting for dice animation...');
-                    await page.waitForTimeout(60000);
-                    const credits = await page.$eval('#creditBalance', el => el.innerText).catch(() => 'Unknown');
-                    console.log(`💰 Updated Credits: ${credits}`);
-                }
-            }
+      if (throwDiceClicked) {
+        // console.log("✅ 'Throw Dice' button clicked!");
+        console.log("⏳ Waiting 60 seconds for dice animation...");
+        await delay(60000);
+        userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
+        console.log(`💰 Updated Credits: ${userCredits}`);
+      } else {
+        console.log("⚠️ 'Throw Dice' button not found.");
+      }
+    } else {
+      const timerText = await page.evaluate(() => {
+        const h2Elements = Array.from(document.querySelectorAll("h2"));
+        for (let h2 of h2Elements) {
+          const text = h2.innerText.trim();
+          if (/^\d{2}:\d{2}:\d{2}$/.test(text)) {
+            return text;
+          }
         }
-        await browser.close();
-    } catch (error) {
-        console.error('❌ Puppeteer error:', error);
+        return null;
+      });
+
+      if (timerText) {
+        console.log(`⏱ Time Left until next ROLL: ${timerText}`);
+      } else {
+        console.log("⚠️ No timer found. Using default sleep time.");
+      }
     }
+    await browser.close();
+  } catch (error) {
+    console.error("❌ Error:", error);
+  }
 }
 
-async function startRoutine() {
+(async () => {
+  console.clear();
+  console.log(`Tool được phát triển bởi nhóm telegram: https://t.me/airdrophuntersieutoc`);
+  console.log("🚀 Starting Puppeteer Bot...");
+  const data = loadData("data.txt");
+  const proxies = loadData("proxy.txt");
+
+  while (true) {
     try {
-        const quest = await fetchDailyDiceRollQuest();
-        if (quest) {
-            await runPuppeteer();
-            await completeDailyDiceRollQuest(quest);
-        }
+      console.log("🔄 New cycle started...");
+      for (let i = 0; i < data.length; i++) {
+        const cookie = {
+          name: "__Secure-next-auth.session-token",
+          value: data[i],
+          domain: ".magicnewton.com",
+          path: "/",
+          secure: true,
+          httpOnly: true,
+        };
+        const proxy = proxies[i];
+        const [username, password, ip, port] = proxy.replace("http://", "").replace("@", ":").split(":");
+        await runAccount(cookie, proxy);
+      }
     } catch (error) {
-        console.error(`🚨 Error dalam eksekusi script:`, error);
+      console.error("❌ Error:", error);
     }
-    console.log(`⏳ Menunggu 24 jam sebelum menjalankan ulang...`);
-    await new Promise(resolve => setTimeout(resolve, WAIT_TIME));
-    await startRoutine();
-}
-
-startRoutine();
+    const extraDelay = RANDOM_EXTRA_DELAY();
+    console.log(`🔄 Cycle complete. Sleeping for 24 hours + random delay of ${extraDelay / 60000} minutes...`);
+    await delay(DEFAULT_SLEEP_TIME);
+  }
+})();
