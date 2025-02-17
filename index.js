@@ -91,7 +91,7 @@ async function runAccount(cookie) {
         console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
     } else {
-      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later.`);
+      console.log(`${getCurrentTime()} - ⚠️  Cannot roll at the moment. Please try again later!!!`);
     }
     await browser.close();
   } catch (error) {
