@@ -12,9 +12,9 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function getCurrentTime() {
+function getCurrentTimestamp() {
   const now = new Date();
-  return now.toISOString().replace("T", " ").split(".")[0]; // Format: YYYY-MM-DD HH:MM:SS
+  return now.toISOString().replace("T", " ").split(".")[0]; // Format YYYY-MM-DD HH:MM:SS
 }
 
 function loadData(file) {
