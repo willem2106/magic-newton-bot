@@ -1,5 +1,5 @@
 {
-  "name": "magicnewton-login",
+  "name": "magicnewton-daily-roll-bot",
   "version": "1.0.0",
   "description": "Script daily roll MagicNewton menggunakan cookies",
   "main": "index.js",
