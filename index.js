@@ -5,7 +5,7 @@ require('colors');
 const { displayHeader } = require('./helpers');
 
 const LOGIN_API = 'https://www.magicnewton.com/portal/api/auth/session';
-const QUESTS_API = 'https://www.magicnewton.com/portal/api/quests';
+const QUESTS_API = 'https://www.magicnewton.com/portal/api/userQuests';
 const COOKIE = process.env.COOKIE;
 const WAIT_TIME = 24 * 60 * 60 * 1000;
 
@@ -42,14 +42,17 @@ async function fetchAndCompleteDailyDiceRoll() {
             headers: { 'Cookie': COOKIE, 'User-Agent': 'Mozilla/5.0' }
         });
         
+        console.log("📡 Response dari server:", response.data); // Debugging output
+
         if (response.status === 200 && response.data && Array.isArray(response.data)) {
             const quests = response.data;
-            const diceRollQuest = quests.find(q => q.title === "Daily Dice Roll" && q.enabled);
+            const diceRollQuest = quests.find(q => q.questId === "f56c760b-2186-40cb-9cbc-3af4a3dc20e2");
             
             if (diceRollQuest) {
-                await completeQuest(diceRollQuest.id, diceRollQuest.title);
+                console.log(`🎯 Ditemukan Daily Dice Roll:`, diceRollQuest);
+                await completeQuest(diceRollQuest.id, "Daily Dice Roll");
             } else {
-                console.log(`⚠️ [${getCurrentTimestamp()}] Daily Dice Roll tidak tersedia atau sudah diklaim.`);
+                console.log(`⚠️ [${getCurrentTimestamp()}] Daily Dice Roll tidak ditemukan atau sudah diklaim.`);
             }
         } else {
             console.log(`⚠️ [${getCurrentTimestamp()}] Gagal mengambil daftar quests.`);
