@@ -37,7 +37,7 @@ async function runAccount(cookie) {
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
     const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Tidak diketahui");
-console.log(`🏠 Alamat terdeteksi: ${userAddress}`);
+    console.log(`🏠 Alamat terdeteksi: ${userAddress}`);
 
     let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Tidak diketahui");
     console.log(`💰 Saldo saat ini: ${userCredits}`);
@@ -95,7 +95,7 @@ console.log(`🏠 Alamat terdeteksi: ${userAddress}`);
 }
 
 (async () => {
-  console.clear();
+  displayHeader(); // Memastikan header muncul sebelum bot dijalankan
   console.log("🚀 Memulai Bot Puppeteer...");
   const data = loadData("data.txt");
 
