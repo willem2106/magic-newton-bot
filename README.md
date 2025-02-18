@@ -6,12 +6,12 @@ https://magicnewton.com/portal?referral=trtwhooklqs0jr7g
 
 ➖ Clone repository:
 ```
-git clone https://github.com/Odipus40/heyelsa-dayli-login/
+git clone https://github.com/Odipus40/magic-newton-bot.git
 ```
 
-➖ Directory Heyelsa:
+➖ Directory Magic Newton:
 ```
-cd heyelsa-dayli-login
+cd magic-newton-bot
 ```
 
 ➖ install modules
@@ -19,29 +19,21 @@ cd heyelsa-dayli-login
 npm install
 ```
 
-➖ Create folder cookies.txt
-```
-nano cookies.txt
-```
-`
-fill_your_cookie_session
-`
-
 ➖ Create folder data.txt
 ```
 nano data.txt
 ```
 `
-fill_your_evm_address
+fill_your_cookie_session
 `
 
 ➖ Create Screen
 ```
-screen -S heyelsa
+screen -S magicnewton
 ```
 ➖ Run
 ```
-node login.js
+node index.js
 ```
 
 ➖ Exit screen:
