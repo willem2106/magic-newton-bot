@@ -27,6 +27,7 @@ nano data.txt
 fill_your_cookie_session
 `
 
+
 ➖ Create Screen
 ```
 screen -S magicnewton
