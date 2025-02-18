@@ -14,7 +14,14 @@ function delay(ms) {
 
 function getCurrentTime() {
   const now = new Date();
-  return now.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }); // Sesuaikan dengan zona waktu Anda
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Januari = 0
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  return `[${day}/${month}/${year}, ${hours}:${minutes}:${seconds}]`;
 }
 
 function loadData(file) {
@@ -91,7 +98,7 @@ async function runAccount(cookie) {
         console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
     } else {
-      console.log(`${getCurrentTime()} - ⚠️  Cannot roll at the moment. Please try again later!!!`);
+      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
     }
     await browser.close();
   } catch (error) {
@@ -102,7 +109,7 @@ async function runAccount(cookie) {
 (async () => {
   console.clear();
   displayHeader(); // Tambahkan header di sini
-  console.log(`${getCurrentTime()} - 🚀 Starting Macignewton Bot...`);
+  console.log(`${getCurrentTime()} - 🚀 Starting MagicNewton Bot...`);
   const data = loadData("data.txt");
 
   while (true) {
