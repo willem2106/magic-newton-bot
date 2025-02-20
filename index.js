@@ -84,7 +84,7 @@ async function runAccount(cookie) {
             });
 
           if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
+            console.log(`${getCurrentTime()} - 🖱️ Press clicked (${i}/5)`);
           } else {
             console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
             break;
@@ -104,7 +104,7 @@ async function runAccount(cookie) {
         });
 
         if (bankClicked) {
-          console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
+          console.log(`${getCurrentTime()} - 🏦 Bank clicked.`);
           await delay(3000); // Delay untuk memastikan nilai dice muncul setelah klik Bank
 
           // Ambil hasil Dice Roll setelah Bank ditekan
@@ -115,7 +115,7 @@ async function runAccount(cookie) {
 
           // Ambil saldo terbaru setelah hasil dice roll ditambahkan
           userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 💳 Final Balance after Bank: ${userCredits}`);
+          console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
         } else {
           console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
         }
