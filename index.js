@@ -13,22 +13,7 @@ function delay(ms) {
 }
 
 function getCurrentTime() {
-  const now = new Date();
-  return `[${now.toLocaleString()}]`;
-}
-
-function loadData(file) {
-  try {
-    const datas = fs.readFileSync(file, "utf8").split("\n").filter(Boolean);
-    if (!datas.length) {
-      console.log(`${getCurrentTime()} - No data found in file ${file}`.red);
-      return [];
-    }
-    return datas;
-  } catch (error) {
-    console.log(`${getCurrentTime()} - File ${file} not found`.red);
-    return [];
-  }
+  return new Date().toLocaleString("id-ID", { hour12: false });
 }
 
 async function runAccount(cookie) {
@@ -83,36 +68,34 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - 🎲 Throwing dice...`);
-        await delay(60000); // Menunggu animasi dadu selesai
+        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
+        await delay(60000);
 
-        // **Menekan tombol "Press" sebanyak 5 kali dengan delay 5 detik**
-        for (let i = 0; i < 5; i++) {
-          await page.waitForSelector('button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU > div > p', { timeout: 10000 });
-
-          const pressClicked = await page.$$eval("button", buttons => {
-            const target = buttons.find(btn => btn.querySelector("p")?.innerText.includes("Press"));
-            if (target) {
-              target.click();
-              return true;
-            }
-            return false;
-          });
+        // Klik tombol "Press" sebanyak 5x dengan delay 5 detik setiap klik
+        for (let i = 1; i <= 5; i++) {
+          const pressClicked = await page.$$eval("button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU",
+            buttons => {
+              const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
+              if (target) {
+                target.click();
+                return true;
+              }
+              return false;
+            });
 
           if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🔘 Press button clicked (${i + 1}/5)`);
-            await delay(5000); // Delay 5 detik setelah setiap klik
+            console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
           } else {
-            console.log(`${getCurrentTime()} - ❌ Press button not found!`);
-            break; // Jika tombol "Press" tidak ditemukan, hentikan loop
+            console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
+            break;
           }
+
+          await delay(5000);
         }
 
-        // **Klik tombol "Bank" setelah selesai menekan "Press"**
-        await page.waitForSelector('button:nth-child(3) > div > p', { timeout: 30000 });
-
-        const bankClicked = await page.$$eval("button", buttons => {
-          const target = buttons.find(btn => btn.querySelector("p")?.innerText.includes("Bank"));
+        // Klik tombol "Bank"
+        const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
+          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
           if (target) {
             target.click();
             return true;
@@ -121,18 +104,26 @@ async function runAccount(cookie) {
         });
 
         if (bankClicked) {
-          console.log(`${getCurrentTime()} - 🏦 Navigating to Bank section...`);
-        } else {
-          console.log(`${getCurrentTime()} - ❌ Bank button not found!`);
-        }
+          console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
+          await delay(3000); // Delay untuk memastikan nilai dice muncul setelah klik Bank
 
-        userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-        console.log(`${getCurrentTime()} - 💰 Latest balance: ${userCredits}`);
+          // Ambil hasil Dice Roll setelah Bank ditekan
+          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC",
+            el => el.innerText).catch(() => "Unknown");
+
+          console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
+
+          // Ambil saldo terbaru setelah hasil dice roll ditambahkan
+          userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
+          console.log(`${getCurrentTime()} - 💳 Final Balance after Bank: ${userCredits}`);
+        } else {
+          console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
+        }
       } else {
         console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
     } else {
-      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment.`);
+      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
     }
     await browser.close();
   } catch (error) {
@@ -142,9 +133,9 @@ async function runAccount(cookie) {
 
 (async () => {
   console.clear();
-  displayHeader(); // Menampilkan header
+  displayHeader();
   console.log(`${getCurrentTime()} - 🚀 Starting MagicNewton Bot...`);
-  const data = loadData("data.txt");
+  const data = fs.readFileSync("data.txt", "utf8").split("\n").filter(Boolean);
 
   while (true) {
     try {
@@ -164,7 +155,7 @@ async function runAccount(cookie) {
       console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`${getCurrentTime()} - ⏳ Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
+    console.log(`${getCurrentTime()} - 🔄 Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
