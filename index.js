@@ -14,21 +14,14 @@ function delay(ms) {
 
 function getCurrentTime() {
   const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0'); // Januari = 0
-  const year = now.getFullYear();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  
-  return `[${day}/${month}/${year}, ${hours}:${minutes}:${seconds}]`;
+  return `[${now.toLocaleString()}]`;
 }
 
 function loadData(file) {
   try {
-    const datas = fs.readFileSync(file, "utf8").replace(/\r/g, "").split("\n").filter(Boolean);
-    if (datas?.length <= 0) {
-      console.log(colors.red(`${getCurrentTime()} - No data found in the file ${file}`));
+    const datas = fs.readFileSync(file, "utf8").split("\n").filter(Boolean);
+    if (!datas.length) {
+      console.log(`${getCurrentTime()} - No data found in file ${file}`.red);
       return [];
     }
     return datas;
@@ -48,15 +41,15 @@ async function runAccount(cookie) {
     await page.setCookie(cookie);
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-    const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", (el) => el.innerText).catch(() => "Unknown");
+    const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 🏠 Your account: ${userAddress}`);
 
-    let userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
+    let userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 💰 Total your points: ${userCredits}`);
 
     await page.waitForSelector("button", { timeout: 30000 });
-    const rollNowClicked = await page.$$eval("button", (buttons) => {
-      const target = buttons.find((btn) => btn.innerText && btn.innerText.includes("Roll now"));
+    const rollNowClicked = await page.$$eval("button", buttons => {
+      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Roll now"));
       if (target) {
         target.click();
         return true;
@@ -69,8 +62,8 @@ async function runAccount(cookie) {
     }
     await delay(5000);
 
-    const letsRollClicked = await page.$$eval("button", (buttons) => {
-      const target = buttons.find((btn) => btn.innerText && btn.innerText.includes("Let's roll"));
+    const letsRollClicked = await page.$$eval("button", buttons => {
+      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Let's roll"));
       if (target) {
         target.click();
         return true;
@@ -80,8 +73,8 @@ async function runAccount(cookie) {
 
     if (letsRollClicked) {
       await delay(5000);
-      const throwDiceClicked = await page.$$eval("button", (buttons) => {
-        const target = buttons.find((btn) => btn.innerText && btn.innerText.includes("Throw Dice"));
+      const throwDiceClicked = await page.$$eval("button", buttons => {
+        const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Throw Dice"));
         if (target) {
           target.click();
           return true;
@@ -90,15 +83,56 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
-        await delay(60000);
-        userCredits = await page.$eval("#creditBalance", (el) => el.innerText).catch(() => "Unknown");
+        console.log(`${getCurrentTime()} - 🎲 Throwing dice...`);
+        await delay(60000); // Menunggu animasi dadu selesai
+
+        // **Menekan tombol "Press" sebanyak 5 kali dengan delay 5 detik**
+        for (let i = 0; i < 5; i++) {
+          await page.waitForSelector('button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU > div > p', { timeout: 10000 });
+
+          const pressClicked = await page.$$eval("button", buttons => {
+            const target = buttons.find(btn => btn.querySelector("p")?.innerText.includes("Press"));
+            if (target) {
+              target.click();
+              return true;
+            }
+            return false;
+          });
+
+          if (pressClicked) {
+            console.log(`${getCurrentTime()} - 🔘 Press button clicked (${i + 1}/5)`);
+            await delay(5000); // Delay 5 detik setelah setiap klik
+          } else {
+            console.log(`${getCurrentTime()} - ❌ Press button not found!`);
+            break; // Jika tombol "Press" tidak ditemukan, hentikan loop
+          }
+        }
+
+        // **Klik tombol "Bank" setelah selesai menekan "Press"**
+        await page.waitForSelector('button:nth-child(3) > div > p', { timeout: 30000 });
+
+        const bankClicked = await page.$$eval("button", buttons => {
+          const target = buttons.find(btn => btn.querySelector("p")?.innerText.includes("Bank"));
+          if (target) {
+            target.click();
+            return true;
+          }
+          return false;
+        });
+
+        if (bankClicked) {
+          console.log(`${getCurrentTime()} - 🏦 Navigating to Bank section...`);
+        } else {
+          console.log(`${getCurrentTime()} - ❌ Bank button not found!`);
+        }
+
+        userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
         console.log(`${getCurrentTime()} - 💰 Latest balance: ${userCredits}`);
       } else {
         console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
     } else {
-      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
+      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment.`);
     }
     await browser.close();
   } catch (error) {
@@ -108,7 +142,7 @@ async function runAccount(cookie) {
 
 (async () => {
   console.clear();
-  displayHeader(); // Tambahkan header di sini
+  displayHeader(); // Menampilkan header
   console.log(`${getCurrentTime()} - 🚀 Starting MagicNewton Bot...`);
   const data = loadData("data.txt");
 
@@ -130,7 +164,7 @@ async function runAccount(cookie) {
       console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`${getCurrentTime()} - 🔄 Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
+    console.log(`${getCurrentTime()} - ⏳ Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
