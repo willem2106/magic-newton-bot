@@ -68,8 +68,8 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
-        await delay(60000);
+        console.log(`${getCurrentTime()} - ⏳ Waiting for 30 seconds for dice animation...`);
+        await delay(30000);
 
         // Klik tombol "Press" sebanyak 5x dengan delay 5 detik setiap klik
         for (let i = 1; i <= 5; i++) {
