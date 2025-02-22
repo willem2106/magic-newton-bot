@@ -68,8 +68,8 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
-        await delay(60000);
+        console.log(`${getCurrentTime()} - ⏳ Waiting for 30 seconds for dice animation...`);
+        await delay(30000);
 
         // Klik tombol "Press" sebanyak 5x dengan delay 5 detik setiap klik
         for (let i = 1; i <= 5; i++) {
@@ -93,13 +93,13 @@ async function runAccount(cookie) {
         // Klik tombol "Bank"
         await delay(3000); // Tunggu 3 detik sebelum mencari tombol Bank
 
-const bankExists = await page.$("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button:nth-child(3) > div > p");
+const bankButton = await page.$("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button:nth-child(3) > div > p");
 
-if (!bankExists) {
-    console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
-} else {
-    await page.click("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button:nth-child(3) > div > p");
+if (bankButton) {
+    await bankButton.click();
     console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
+} else {
+    console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
 }
 
         if (bankClicked) {
