@@ -73,19 +73,17 @@ async function runAccount(cookie) {
 
         // Klik tombol "Press" sebanyak 5x dengan delay 5 detik setiap klik
         for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU",
-            buttons => {
-              const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-              if (target) {
-                target.click();
-                return true;
-              }
-              return false;
-            });
+          const pressClicked = await page.$$eval("button > div > p", buttons => {
+            const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
+            if (target) {
+              target.click();
+              return true;
+            }
+            return false;
+          });
 
           if (pressClicked) {
             console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            console.log(`${getCurrentTime()} - 🖱️ Press clicked (${i}/5)`);
           } else {
             console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
             break;
@@ -106,7 +104,6 @@ async function runAccount(cookie) {
 
         if (bankClicked) {
           console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
-          console.log(`${getCurrentTime()} - 🏦 Bank clicked.`);
           await delay(3000); // Delay untuk memastikan nilai dice muncul setelah klik Bank
 
           // Ambil hasil Dice Roll setelah Bank ditekan
@@ -117,7 +114,6 @@ async function runAccount(cookie) {
 
           // Ambil saldo terbaru setelah hasil dice roll ditambahkan
           userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 💳 Final Balance after Bank: ${userCredits}`);
           console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
         } else {
           console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
