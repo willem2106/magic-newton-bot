@@ -73,35 +73,34 @@ async function runAccount(cookie) {
 
         // Klik tombol "Press" sebanyak 5x dengan delay 5 detik setiap klik
         for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU",
-            buttons => {
-              const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-              if (target) {
-                target.click();
-                return true;
-              }
-              return false;
-            });
+    await page.waitForTimeout(1000); // Tunggu 1 detik sebelum mencari tombol lagi
 
-          if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🖱️ Press clicked (${i}/5)`);
-          } else {
-            console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
-            break;
-          }
+    // Cek apakah tombol Press ada sebelum mencoba klik
+    const pressExists = await page.$("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU > div > p");
+    
+    if (!pressExists) {
+        console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
+        break;
+    }
 
-          await delay(5000);
-        }
+    // Klik tombol Press
+    await page.click("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU > div > p");
+    console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
+
+    await delay(5000); // Delay 5 detik sebelum klik berikutnya
+}
 
         // Klik tombol "Bank"
-        const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
-          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
-          if (target) {
-            target.click();
-            return true;
-          }
-          return false;
-        });
+        await page.waitForTimeout(3000); // Tunggu 3 detik sebelum mencari tombol Bank
+
+const bankExists = await page.$("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button:nth-child(3) > div > p");
+
+if (!bankExists) {
+    console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
+} else {
+    await page.click("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button:nth-child(3) > div > p");
+    console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
+}
 
         if (bankClicked) {
           console.log(`${getCurrentTime()} - 🏦 Bank clicked.`);
