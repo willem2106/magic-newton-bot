@@ -89,7 +89,7 @@ async function runAccount(cookie) {
             break;
           }
 
-          await delay(5000);
+          await delay(15000);
         }
 
         // Klik tombol "Bank"
