@@ -9,7 +9,7 @@ const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000;
 const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000;
 
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function getCurrentTime() {
@@ -18,13 +18,12 @@ function getCurrentTime() {
 
 async function runAccount(cookie) {
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
     const page = await browser.newPage();
     await page.setCookie(cookie);
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
+
+    await delay(3000);
 
     const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 🏠 Your account: ${userAddress}`);
@@ -32,95 +31,53 @@ async function runAccount(cookie) {
     let userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 💰 Total your points: ${userCredits}`);
 
-    await page.waitForSelector("button > div > p", { timeout: 30000 });
-    const rollNowClicked = await page.$$eval("button > div > p", buttons => {
-      const target = buttons.find(btn => btn.innerText.trim() === "Roll now");
-      if (target) {
-        target.click();
-        return true;
-      }
-      return false;
-    });
-
-    if (rollNowClicked) {
+    await page.waitForSelector("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", { timeout: 10000 });
+    const rollNowButton = await page.$x("//p[contains(text(), 'Roll now')]");
+    if (rollNowButton.length > 0) {
+      await rollNowButton[0].click();
       console.log(`${getCurrentTime()} - ✅ Starting daily roll...`);
     } else {
-      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
-      await browser.close();
+      console.log(`${getCurrentTime()} - ⚠️ 'Roll now' button not found.`);
       return;
     }
+
     await delay(5000);
-
-    const letsRollClicked = await page.$$eval("button > div > p", buttons => {
-      const target = buttons.find(btn => btn.innerText.trim() === "Let's roll");
-      if (target) {
-        target.click();
-        return true;
-      }
-      return false;
-    });
-
-    if (letsRollClicked) {
+    
+    const letsRollButton = await page.$x("//p[contains(text(), 'Let's roll')]");
+    if (letsRollButton.length > 0) {
+      await letsRollButton[0].click();
       await delay(5000);
-      const throwDiceClicked = await page.$$eval("button > div > p", buttons => {
-        const target = buttons.find(btn => btn.innerText.trim() === "Throw Dice");
-        if (target) {
-          target.click();
-          return true;
-        }
-        return false;
-      });
-
-      if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
-        await delay(60000);
-
-        for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button > div > p", buttons => {
-            const target = buttons.find(btn => btn.innerText.trim() === "Press");
-            if (target) {
-              target.click();
-              return true;
-            }
-            return false;
-          });
-
-          if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🖱️ Press clicked (${i}/5)`);
-          } else {
-            console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
-            break;
-          }
-          await delay(5000);
-        }
-
-        const bankClicked = await page.$$eval("button > div > p", buttons => {
-          const target = buttons.find(btn => btn.innerText.trim() === "Bank");
-          if (target) {
-            target.click();
-            return true;
-          }
-          return false;
-        });
-
-        if (bankClicked) {
-          console.log(`${getCurrentTime()} - 🏦 Bank clicked.`);
-          await delay(3000);
-
-          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
-
-          userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
-        } else {
-          console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
-        }
-      } else {
-        console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
-      }
-    } else {
-      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
     }
+
+    const throwDiceButton = await page.$x("//p[contains(text(), 'Throw Dice')]");
+    if (throwDiceButton.length > 0) {
+      await throwDiceButton[0].click();
+      console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
+      await delay(60000);
+    }
+
+    for (let i = 1; i <= 5; i++) {
+      const pressButton = await page.$x("//p[contains(text(), 'Press')]");
+      if (pressButton.length > 0) {
+        await pressButton[0].click();
+        console.log(`${getCurrentTime()} - 🖱️ Press clicked (${i}/5)`);
+        await delay(5000);
+      } else {
+        console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
+        break;
+      }
+    }
+
+    const bankButton = await page.$x("//p[contains(text(), 'Bank')]");
+    if (bankButton.length > 0) {
+      await bankButton[0].click();
+      console.log(`${getCurrentTime()} - 🏦 Bank clicked.`);
+      await delay(3000);
+    }
+
+    userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
+    
     await browser.close();
   } catch (error) {
     console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
