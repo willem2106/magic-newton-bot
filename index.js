@@ -5,8 +5,8 @@ require('colors');
 const { displayHeader } = require('./helpers');
 
 const MAGICNEWTON_URL = "https://www.magicnewton.com/portal/rewards";
-const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 hours
-const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // Random delay between 5-10 minutes
+const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000;
+const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000;
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,9 +32,9 @@ async function runAccount(cookie) {
     let userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 💰 Total your points: ${userCredits}`);
 
-    await page.waitForSelector("button", { timeout: 30000 });
-    const rollNowClicked = await page.$$eval("button", buttons => {
-      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Roll now"));
+    await page.waitForSelector("button > div > p", { timeout: 30000 });
+    const rollNowClicked = await page.$$eval("button > div > p", buttons => {
+      const target = buttons.find(btn => btn.innerText.trim() === "Roll now");
       if (target) {
         target.click();
         return true;
@@ -44,11 +44,15 @@ async function runAccount(cookie) {
 
     if (rollNowClicked) {
       console.log(`${getCurrentTime()} - ✅ Starting daily roll...`);
+    } else {
+      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
+      await browser.close();
+      return;
     }
     await delay(5000);
 
-    const letsRollClicked = await page.$$eval("button", buttons => {
-      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Let's roll"));
+    const letsRollClicked = await page.$$eval("button > div > p", buttons => {
+      const target = buttons.find(btn => btn.innerText.trim() === "Let's roll");
       if (target) {
         target.click();
         return true;
@@ -58,8 +62,8 @@ async function runAccount(cookie) {
 
     if (letsRollClicked) {
       await delay(5000);
-      const throwDiceClicked = await page.$$eval("button", buttons => {
-        const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Throw Dice"));
+      const throwDiceClicked = await page.$$eval("button > div > p", buttons => {
+        const target = buttons.find(btn => btn.innerText.trim() === "Throw Dice");
         if (target) {
           target.click();
           return true;
@@ -72,8 +76,8 @@ async function runAccount(cookie) {
         await delay(60000);
 
         for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button", buttons => {
-            const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
+          const pressClicked = await page.$$eval("button > div > p", buttons => {
+            const target = buttons.find(btn => btn.innerText.trim() === "Press");
             if (target) {
               target.click();
               return true;
@@ -87,12 +91,11 @@ async function runAccount(cookie) {
             console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
             break;
           }
-
           await delay(5000);
         }
 
-        const bankClicked = await page.$$eval("button", buttons => {
-          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
+        const bankClicked = await page.$$eval("button > div > p", buttons => {
+          const target = buttons.find(btn => btn.innerText.trim() === "Bank");
           if (target) {
             target.click();
             return true;
@@ -104,7 +107,7 @@ async function runAccount(cookie) {
           console.log(`${getCurrentTime()} - 🏦 Bank clicked.`);
           await delay(3000);
 
-          const diceRollResult = await page.$eval("h2", el => el.innerText).catch(() => "Unknown");
+          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
           console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
 
           userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
