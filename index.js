@@ -75,8 +75,8 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Waiting for 30 seconds for dice animation...`);
-        await delay(30000);
+        console.log(`${getCurrentTime()} - ⏳ Waiting for 60 seconds for dice animation...`);
+        await delay(60000);
 
         for (let i = 1; i <= 5; i++) {
           await page.waitForSelector("button.hoEiop.dgDkEX", { timeout: 10000 });
