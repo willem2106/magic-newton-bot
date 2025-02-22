@@ -73,7 +73,7 @@ async function runAccount(cookie) {
 
         // Klik tombol "Press" sebanyak 5x dengan delay 5 detik setiap klik
         for (let i = 1; i <= 5; i++) {
-    await page.waitForTimeout(1000); // Tunggu 1 detik sebelum mencari tombol lagi
+    await delay(1000); // Tunggu 1 detik sebelum mencari tombol lagi
 
     // Cek apakah tombol Press ada sebelum mencoba klik
     const pressExists = await page.$("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button.hoEiop.dgDkEX.iFUqYl.bZRhvx.eAZrqn.diIxfU.jTWvec.ThTOq.efvJEH.cGFOJB.fzpbIC.fzpolx.coifUy.eAZrpM.kyvghW.fznPAm.fzoAXm.eePqkU > div > p");
@@ -91,7 +91,7 @@ async function runAccount(cookie) {
 }
 
         // Klik tombol "Bank"
-        await page.waitForTimeout(3000); // Tunggu 3 detik sebelum mencari tombol Bank
+        await delay(3000); // Tunggu 3 detik sebelum mencari tombol Bank
 
 const bankExists = await page.$("body > div.dMMuNs.kcKISj > div.fPSBzf.bYPztT.dKLBtz.iRgpoQ.container-page-loaded > div.fPSBzf.container-content > div > div:nth-child(1) > div.fPSBzf.bYPztT.pnxsH.cMGtQw > button:nth-child(3) > div > p");
 
