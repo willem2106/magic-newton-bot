@@ -71,26 +71,37 @@ async function runAccount(cookie) {
         console.log(${getCurrentTime()} - ⏳ Waiting for 30 seconds for dice animation...);
         await delay(30000);
 
-        // Klik tombol "Press" sebanyak 5x dengan delay 10 detik setiap klik
-        for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button > div > p", buttons => {
-            const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-            if (target) {
-              target.click();
-              return true;
-            }
-            return false;
-          });
+// Klik tombol "Press" sebanyak 5x dengan delay 10 detik setiap klik
+for (let i = 1; i <= 5; i++) {
+  const pressClicked = await page.$$eval("button > div > p", buttons => {
+    const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
+    if (target) {
+      target.click();
+      return true;
+    }
+    return false;
+  });
 
-          if (pressClicked) {
-            console.log(${getCurrentTime()} - 🖱️ Press button clicked (${i}/5));
-          } else {
-            console.log(${getCurrentTime()} - ⚠️ 'Press' button not found.);
-            break;
-          }
+  if (pressClicked) {
+    console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
 
-          await delay(10000);
-        }
+    // Tunggu sebentar agar nilai berubah
+    await delay(3000);
+
+    // Ambil nilai terbaru setelah menekan tombol "Press"
+    const currentPoints = await page.$eval(
+      "h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC",
+      el => el.innerText
+    ).catch(() => "Unknown");
+
+    console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
+  } else {
+    console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
+    break;
+  }
+
+  await delay(10000);
+}
 
         // Klik tombol "Bank"
         const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
