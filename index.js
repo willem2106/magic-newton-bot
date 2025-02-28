@@ -16,6 +16,16 @@ function getCurrentTime() {
   return new Date().toLocaleString("id-ID", { hour12: false });
 }
 
+async function getCurrentScore(page) {
+  try {
+    const score = await page.$eval(".score-selector", el => el.innerText).catch(() => "Unknown");
+    return parseInt(score) || 0;
+  } catch (error) {
+    console.error(`${getCurrentTime()} - ❌ Error getting score:`, error.message);
+    return 0;
+  }
+}
+
 async function runAccount(cookie) {
   let browser;
   try {
@@ -136,4 +146,5 @@ async function runAccount(cookie) {
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
+
 
