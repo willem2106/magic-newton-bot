@@ -4,6 +4,8 @@ Magic Newton Daily roll bot
 If you can not have account register here:
 https://magicnewton.com/portal?referral=trtwhooklqs0jr7g
 
+Support multi account
+
 ➖ Clone repository:
 ```
 git clone https://github.com/Odipus40/magic-newton-bot.git
@@ -24,7 +26,8 @@ npm install
 nano data.txt
 ```
 `
-fill_your_cookie_session
+fill_your_cookie_session_1
+fill_your_cookie_session_2
 `
 
 
