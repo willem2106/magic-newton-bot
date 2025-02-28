@@ -79,6 +79,22 @@ async function runAccount(cookie) {
                 rollCount++;
                 await delay(60000);
               }
+    
+            } else {
+              console.log("⚠️ 'Throw Dice' button not found.");
+            }
+          } else {
+            console.log("👇 Wait! ROLL not available yet. ");
+            const timerText = await page.evaluate(() => {
+              const h2Elements = Array.from(document.querySelectorAll('h2'));
+              for (let h2 of h2Elements) {
+                const text = h2.innerText.trim();
+                if (/^\d{2}:\d{2}:\d{2}$/.test(text)) {
+                  return text;
+                }
+              }
+              return null;
+            });
 
           const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
           console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
