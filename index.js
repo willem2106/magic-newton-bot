@@ -26,6 +26,37 @@ async function getCurrentScore(page) {
   }
 }
 
+async function pressOrBank(page, rollCount, score) {
+  try {
+    if (score >= 100 || rollCount === 5) { // Contoh kondisi, bisa disesuaikan
+      console.log(`${getCurrentTime()} - 🏦 Banking the score...`);
+      const bankButtonClicked = await page.$$eval("button", buttons => {
+        const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
+        if (target) {
+          target.click();
+          return true;
+        }
+        return false;
+      });
+      return false; // Berhenti setelah banking
+    } else {
+      console.log(`${getCurrentTime()} - 🎲 Continuing to roll...`);
+      const rollAgainClicked = await page.$$eval("button", buttons => {
+        const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Roll Again"));
+        if (target) {
+          target.click();
+          return true;
+        }
+        return false;
+      });
+      return rollAgainClicked;
+    }
+  } catch (error) {
+    console.error(`${getCurrentTime()} - ❌ Error in pressOrBank:`, error.message);
+    return false;
+  }
+}
+
 async function runAccount(cookie) {
   let browser;
   try {
@@ -94,16 +125,6 @@ async function runAccount(cookie) {
         }
       } else {
         console.log("👇 Wait! ROLL not available yet. ");
-        const timerText = await page.evaluate(() => {
-          const h2Elements = Array.from(document.querySelectorAll('h2'));
-          for (let h2 of h2Elements) {
-            const text = h2.innerText.trim();
-            if (/^\d{2}:\d{2}:\d{2}$/.test(text)) {
-              return text;
-            }
-          }
-          return null;
-        });
       }
     } else {
       console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
