@@ -65,11 +65,16 @@ async function runAccount(cookie) {
 
           if (pressClicked) {
             console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(9000);
+            await delay(2000);
 
-            await page.waitForSelector("h2.some-class-name", { timeout: 9000 });
-            const currentPoints = await page.$eval("h2.some-class-name", el => el.innerText).catch(() => "Unknown");
-            console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
+            try {
+              console.log("Menunggu elemen h2.some-class-name muncul...");
+              await page.waitForSelector("h2.some-class-name", { timeout: 15000 });
+              const currentPoints = await page.$eval("h2.some-class-name", el => el.innerText);
+              console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
+            } catch (error) {
+              console.log(`${getCurrentTime()} - ⚠️ Elemen h2.some-class-name tidak ditemukan dalam batas waktu.`);
+            }
           } else {
             console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
             break;
