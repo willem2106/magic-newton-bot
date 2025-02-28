@@ -94,7 +94,7 @@ async function runAccount(cookie, accountIndex) {
         try {
           await page.waitForSelector("button:nth-child(3) > div > p", { timeout: 10000 });
           await page.click("button:nth-child(3) > div > p");
-          console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🏦 Bank button clicked.`);
+          console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🏦 Bank button clicked...`);
           await delay(10000);
 
           const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
@@ -103,6 +103,10 @@ async function runAccount(cookie, accountIndex) {
           await page.waitForSelector("#creditBalance", { timeout: 10000 });
           userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
           console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
+
+          // 🔹 Log tambahan setelah daily roll selesai
+          console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🎉 Daily roll completed successfully!`);
+
         } catch (error) {
           console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
         }
