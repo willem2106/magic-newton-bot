@@ -117,17 +117,17 @@ async function runAccount(cookie, accountIndex) {
 (async () => {
   console.clear();
   displayHeader();
-  console.log(`🔹 [Bot] ${getCurrentTime()} - 🚀 Starting MagicNewton Bot...`);
+  console.log(`🔹 [Starting] ${getCurrentTime()} - 🚀 Starting MagicNewton Bot...`);
   const data = fs.readFileSync("data.txt", "utf8").split("\n").filter(Boolean);
 
   while (true) {
-    console.log(`🔹 [Bot] ${getCurrentTime()} - 🔄 Starting your account...`);
+    console.log(`🔹 [Starting] ${getCurrentTime()} - 🔄 Starting your account...`);
     for (let i = 0; i < data.length; i++) {
       const cookie = { name: "__Secure-next-auth.session-token", value: data[i], domain: ".magicnewton.com", path: "/", secure: true, httpOnly: true };
       await runAccount(cookie, i + 1);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`🔹 [Bot] ${getCurrentTime()} - 🔄 Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
+    console.log(`🔹 [Finished] ${getCurrentTime()} - 🔄 Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
