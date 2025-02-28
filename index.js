@@ -55,8 +55,8 @@ async function runAccount(cookie, accountIndex) {
       });
 
       if (throwDiceClicked) {
-        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting for 20 seconds for dice animation...`);
-        await delay(20000);
+        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting for 10 seconds for dice animation...`);
+        await delay(10000);
 
         for (let i = 1; i <= 5; i++) {
           const pressClicked = await page.$$eval("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", buttons => {
@@ -70,9 +70,9 @@ async function runAccount(cookie, accountIndex) {
 
           if (pressClicked) {
             console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(10000);
+            await delay(7000);
             console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting result point press...`);
-            await delay(10000);
+            await delay(7000);
             
             try {
               await page.waitForSelector("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", { timeout: 10000 });
@@ -131,7 +131,7 @@ async function runAccount(cookie, accountIndex) {
       await runAccount(cookie, i + 1);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
-    console.log(`🔹 [Finished] ${getCurrentTime()} - 🔄 Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
+    console.log(`🔹 [Finished] ${getCurrentTime()} - 🔄 Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
     await delay(DEFAULT_SLEEP_TIME + extraDelay);
   }
 })();
