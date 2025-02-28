@@ -18,10 +18,7 @@ function getCurrentTime() {
 
 async function runAccount(cookie) {
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     const page = await browser.newPage();
     await page.setCookie(cookie);
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
@@ -35,24 +32,15 @@ async function runAccount(cookie) {
     await page.waitForSelector("button", { timeout: 30000 });
     const rollNowClicked = await page.$$eval("button", buttons => {
       const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Roll now"));
-      if (target) {
-        target.click();
-        return true;
-      }
+      if (target) { target.click(); return true; }
       return false;
     });
-
-    if (rollNowClicked) {
-      console.log(`${getCurrentTime()} - ✅ Starting daily roll...`);
-    }
+    if (rollNowClicked) console.log(`${getCurrentTime()} - ✅ Starting daily roll...`);
     await delay(5000);
 
     const letsRollClicked = await page.$$eval("button", buttons => {
       const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Let's roll"));
-      if (target) {
-        target.click();
-        return true;
-      }
+      if (target) { target.click(); return true; }
       return false;
     });
 
@@ -60,10 +48,7 @@ async function runAccount(cookie) {
       await delay(5000);
       const throwDiceClicked = await page.$$eval("button", buttons => {
         const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Throw Dice"));
-        if (target) {
-          target.click();
-          return true;
-        }
+        if (target) { target.click(); return true; }
         return false;
       });
 
@@ -74,28 +59,25 @@ async function runAccount(cookie) {
         for (let i = 1; i <= 5; i++) {
           const pressClicked = await page.$$eval("button > div > p", buttons => {
             const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-            if (target) {
-              target.click();
-              return true;
-            }
+            if (target) { target.click(); return true; }
             return false;
           });
 
           if (pressClicked) {
             console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(3000);
-            
-            const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
+            await delay(9000);
+
+            await page.waitForSelector("h2.some-class-name", { timeout: 9000 });
+            const currentPoints = await page.$eval("h2.some-class-name", el => el.innerText).catch(() => "Unknown");
             console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
           } else {
             console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
             break;
           }
-
           await delay(10000);
         }
-
-        const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
+        
+     const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
           const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
           if (target) {
             target.click();
@@ -116,11 +98,7 @@ async function runAccount(cookie) {
         } else {
           console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
         }
-      } else {
-        console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
-    } else {
-      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
     }
     await browser.close();
   } catch (error) {
@@ -138,14 +116,7 @@ async function runAccount(cookie) {
     try {
       console.log(`${getCurrentTime()} - 🔄 Starting your account...`);
       for (let i = 0; i < data.length; i++) {
-        const cookie = {
-          name: "__Secure-next-auth.session-token",
-          value: data[i],
-          domain: ".magicnewton.com",
-          path: "/",
-          secure: true,
-          httpOnly: true,
-        };
+        const cookie = { name: "__Secure-next-auth.session-token", value: data[i], domain: ".magicnewton.com", path: "/", secure: true, httpOnly: true };
         await runAccount(cookie);
       }
     } catch (error) {
