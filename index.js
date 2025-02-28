@@ -98,26 +98,34 @@ async function runAccount(cookie) {
 console.log(`${getCurrentTime()} - ⏳ Waiting before click Bank...`);
 await delay(10000);
         
-     const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
-          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
-          if (target) {
-            target.click();
-            return true;
-          }
-          return false;
-        });
+     // Klik tombol "Bank"
+const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
+    const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
+    if (target) {
+        target.click();
+        return true;
+    }
+    return false;
+});
 
-        if (bankClicked) {
-          console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
-          await delay(10000);
+if (bankClicked) {
+    console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
 
-          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
+    // Tambahkan delay setelah klik tombol Bank agar saldo diperbarui
+    await delay(10000);
 
-          userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
-        } else {
-          console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
+    // Ambil hasil dice roll
+    const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
+
+    // Tunggu saldo muncul sebelum mengambil nilai
+    await page.waitForSelector("#creditBalance", { timeout: 10000 }).catch(() => console.log("⚠️ Saldo tidak muncul dalam batas waktu!"));
+
+    // Ambil saldo setelah dice roll
+    const userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
+} else {
+    console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
         }
       }
     }
