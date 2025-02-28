@@ -71,42 +71,14 @@ async function runAccount(cookie) {
         console.log(`${getCurrentTime()} - ⏳ Waiting for 30 seconds for dice animation...`);
         await delay(30000);
 
-        for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button > div > p", buttons => {
-            const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-            if (target) {
-              target.click();
-              return true;
-            }
-            return false;
-          });
-
-          if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(3000);
-            
-            const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
-            console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
-          } else {
-            console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
-            break;
-          }
-
-          await delay(10000);
-        }
-
-        const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
-          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
-          if (target) {
-            target.click();
-            return true;
-          }
-          return false;
-        });
-
-        if (bankClicked) {
-          console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
-          await delay(3000);
+        let rollCount = 1;
+              while (rollCount <= 5) {
+                let score = await getCurrentScore(page);
+                let shouldContinue = await pressOrBank(page, rollCount, score);
+                if (!shouldContinue) break;
+                rollCount++;
+                await delay(60000);
+              }
 
           const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
           console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
