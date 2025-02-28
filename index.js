@@ -65,7 +65,7 @@ async function runAccount(cookie) {
 
           if (pressClicked) {
             console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(2000);
+            await delay(10000);
 
             try {
               console.log("Menunggu elemen h2.some-class-name muncul...");
