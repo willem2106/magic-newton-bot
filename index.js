@@ -5,18 +5,18 @@ require('colors');
 const { displayHeader } = require('./helpers');
 
 const MAGICNEWTON_URL = "https://www.magicnewton.com/portal/rewards";
-const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000;
-const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000;
+const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 hours
+const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // Random delay between 5-10 minutes
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function getCurrentTime() {
-  return new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", hour12: false });
+  return new Date().toLocaleString("id-ID", { hour12: false });
 }
 
-async function runAccount(cookie, accountIndex) {
+async function runAccount(cookie, accountNumber) {
   try {
     const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     const page = await browser.newPage();
@@ -24,10 +24,10 @@ async function runAccount(cookie, accountIndex) {
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
     const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", el => el.innerText).catch(() => "Unknown");
-    console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🏠 Your account: ${userAddress}`);
+    console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 🏠 Your account: ${userAddress}`);
 
     let userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-    console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 💰 Total your points: ${userCredits}`);
+    console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 💰 Total your points: ${userCredits}`);
 
     await page.waitForSelector("button", { timeout: 30000 });
     const rollNowClicked = await page.$$eval("button", buttons => {
@@ -35,7 +35,7 @@ async function runAccount(cookie, accountIndex) {
       if (target) { target.click(); return true; }
       return false;
     });
-    if (rollNowClicked) console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ✅ Starting daily roll...`);
+    if (rollNowClicked) console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ✅ Starting daily roll...`);
     await delay(5000);
 
     const letsRollClicked = await page.$$eval("button", buttons => {
@@ -53,62 +53,67 @@ async function runAccount(cookie, accountIndex) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⏳ Waiting for 20 seconds for dice animation...`);
+        console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ⏳ Waiting for 20 seconds for dice animation...`);
         await delay(20000);
 
         for (let i = 1; i <= 5; i++) {
           const pressClicked = await page.$$eval("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", buttons => {
             const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-            if (target) {
-              target.click();
-              return true;
-            }
+            if (target) { target.click(); return true; }
             return false;
           });
 
           if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🖱️ Press button clicked (${i}/5)`);
+            console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 🖱️ Press button clicked (${i}/5)`);
             await delay(10000);
-            console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⏳ Waiting result point press...`);
+
+            console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ⏳ Waiting result point press...`);
             await delay(10000);
-            
+
             try {
-              await page.waitForSelector("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", { timeout: 10000 });
-              const currentPoints = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText);
-              console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
+              await page.waitForSelector("h2.jsx-f1b6ce0373f41d79", { timeout: 10000 });
+              const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79", el => el.innerText);
+              console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
             } catch (error) {
-              console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⚠️ Elemen hasil poin tidak ditemukan setelah klik Press.`);
+              console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ⚠️ Result points not found.`);
             }
           } else {
-            console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⚠️ 'Press' button not found.`);
+            console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ⚠️ 'Press' button not found.`);
             break;
           }
           await delay(10000);
         }
 
-        console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⏳ Waiting before click Bank...`);
+        console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ⏳ Waiting before click Bank...`);
         await delay(10000);
 
-        try {
-          await page.waitForSelector("button:nth-child(3) > div > p", { timeout: 10000 });
-          await page.click("button:nth-child(3) > div > p");
-          console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🏦 Bank button clicked.`);
+        const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
+          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
+          if (target) { target.click(); return true; }
+          return false;
+        });
+
+        if (bankClicked) {
+          console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 🏦 Bank button clicked.`);
           await delay(10000);
 
-          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🎲 Dice Roll Result: ${diceRollResult} points`);
+          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm", el => el.innerText).catch(() => "Unknown");
+          console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 🎲 Dice Roll Result: ${diceRollResult} points`);
 
-          await page.waitForSelector("#creditBalance", { timeout: 10000 });
+          await page.waitForSelector("#creditBalance", { timeout: 10000 }).catch(() => console.log("⚠️ Saldo tidak muncul dalam batas waktu!"));
+
           userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-          console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 💳 Final Balance after dice roll: ${userCredits}`);
-        } catch (error) {
-          console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⚠️ 'Bank' button not found.`);
+          console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] 💳 Final Balance after dice roll: ${userCredits}`);
+
+          console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ✅ Daily Roll Complete`);
+        } else {
+          console.log(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ⚠️ 'Bank' button not found.`);
         }
       }
     }
     await browser.close();
   } catch (error) {
-    console.error(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ❌ An error occurred:`, error);
+    console.error(`${getCurrentTime()} - 🔹 [Account ${accountNumber}] ❌ An error occurred:`, error);
   }
 }
 
@@ -119,10 +124,14 @@ async function runAccount(cookie, accountIndex) {
   const data = fs.readFileSync("data.txt", "utf8").split("\n").filter(Boolean);
 
   while (true) {
-    console.log(`${getCurrentTime()} - 🔄 Starting your account...`);
-    for (let i = 0; i < data.length; i++) {
-      const cookie = { name: "__Secure-next-auth.session-token", value: data[i], domain: ".magicnewton.com", path: "/", secure: true, httpOnly: true };
-      await runAccount(cookie, i + 1);
+    try {
+      console.log(`${getCurrentTime()} - 🔄 Starting your account...`);
+      for (let i = 0; i < data.length; i++) {
+        const cookie = { name: "__Secure-next-auth.session-token", value: data[i], domain: ".magicnewton.com", path: "/", secure: true, httpOnly: true };
+        await runAccount(cookie, i + 1);
+      }
+    } catch (error) {
+      console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
     }
     const extraDelay = RANDOM_EXTRA_DELAY();
     console.log(`${getCurrentTime()} - 🔄 Daily roll completed. Bot will run again in 24 hours + random delay of ${extraDelay / 60000} minutes...`);
