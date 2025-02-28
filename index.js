@@ -6,7 +6,7 @@ const { displayHeader } = require('./helpers');
 
 const MAGICNEWTON_URL = "https://www.magicnewton.com/portal/rewards";
 const DEFAULT_SLEEP_TIME = 24 * 60 * 60 * 1000; // 24 hours
-const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; 
+const RANDOM_EXTRA_DELAY = () => Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000; // Random delay between 5-10 minutes
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,30 +23,23 @@ async function runAccount(cookie) {
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
-    await page.setCookie(...[cookie]);
+    await page.setCookie(cookie);
     await page.goto(MAGICNEWTON_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-    await delay(3000);
-    
-    // Ambil alamat akun secara lebih aman
-    const userAddress = await page.evaluate(() => {
-      const el = document.querySelector("p"); // Gunakan selector yang lebih aman
-      return el ? el.innerText : "Unknown";
-    });
+    const userAddress = await page.$eval("p.gGRRlH.WrOCw.AEdnq.hGQgmY.jdmPpC", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 🏠 Your account: ${userAddress}`);
 
-    let userCredits = await page.evaluate(() => {
-      const el = document.querySelector("#creditBalance");
-      return el ? el.innerText : "Unknown";
-    });
+    let userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
     console.log(`${getCurrentTime()} - 💰 Total your points: ${userCredits}`);
 
     await page.waitForSelector("button", { timeout: 30000 });
-    
     const rollNowClicked = await page.$$eval("button", buttons => {
-      const target = buttons.find(btn => btn.innerText.includes("Roll now"));
-      if (target) target.click();
-      return !!target;
+      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Roll now"));
+      if (target) {
+        target.click();
+        return true;
+      }
+      return false;
     });
 
     if (rollNowClicked) {
@@ -54,24 +47,24 @@ async function runAccount(cookie) {
     }
     await delay(5000);
 
-    // Klik "Let's Roll"
-    await page.waitForSelector("button", { timeout: 10000 });
     const letsRollClicked = await page.$$eval("button", buttons => {
-      const target = buttons.find(btn => btn.innerText.includes("Let's roll"));
-      if (target) target.click();
-      return !!target;
+      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Let's roll"));
+      if (target) {
+        target.click();
+        return true;
+      }
+      return false;
     });
 
     if (letsRollClicked) {
       await delay(5000);
-      console.log(`${getCurrentTime()} - 🎲 Rolling the dice...`);
-
-      // Klik "Throw Dice"
-      await page.waitForSelector("button", { timeout: 10000 });
       const throwDiceClicked = await page.$$eval("button", buttons => {
-        const target = buttons.find(btn => btn.innerText.includes("Throw Dice"));
-        if (target) target.click();
-        return !!target;
+        const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Throw Dice"));
+        if (target) {
+          target.click();
+          return true;
+        }
+        return false;
       });
 
       if (throwDiceClicked) {
@@ -80,39 +73,55 @@ async function runAccount(cookie) {
 
         for (let i = 1; i <= 5; i++) {
           const pressClicked = await page.$$eval("button > div > p", buttons => {
-            const target = buttons.find(btn => btn.innerText.includes("Press"));
-            if (target) target.click();
-            return !!target;
+            const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
+            if (target) {
+              target.click();
+              return true;
+            }
+            return false;
           });
 
           if (pressClicked) {
             console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
             await delay(3000);
-
-            await page.waitForFunction(() => {
-              const el = document.querySelector("h2");
-              return el && el.innerText !== "Unknown";
-            }, { timeout: 5000 });
-
-            const currentPoints = await page.evaluate(() => {
-              const el = document.querySelector("h2");
-              return el ? el.innerText : "Unknown";
-            });
-
+            
+            const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
             console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
           } else {
             console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
             break;
           }
+
           await delay(10000);
+        }
+
+        const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
+          const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
+          if (target) {
+            target.click();
+            return true;
+          }
+          return false;
+        });
+
+        if (bankClicked) {
+          console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
+          await delay(3000);
+
+          const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
+          console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
+
+          userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
+          console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
+        } else {
+          console.log(`${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
         }
       } else {
         console.log(`${getCurrentTime()} - ⚠️ 'Throw Dice' button not found.`);
       }
     } else {
-      console.log(`${getCurrentTime()} - ⚠️ 'Let's Roll' button not found.`);
+      console.log(`${getCurrentTime()} - ⚠️ Cannot roll at the moment. Please try again later!!!`);
     }
-
     await browser.close();
   } catch (error) {
     console.error(`${getCurrentTime()} - ❌ An error occurred:`, error);
