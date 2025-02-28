@@ -39,52 +39,72 @@ async function runAccount(cookie, accountIndex) {
     await delay(5000);
 
     for (let i = 1; i <= 5; i++) {
-      const pressClicked = await page.$$eval("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", buttons => {
+    // Klik tombol "Press"
+    const pressClicked = await page.$$eval("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", buttons => {
         const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-        if (target) { target.click(); return true; }
-        return false;
-      });
-
-      if (pressClicked) {
-        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-        await delay(10000);
-        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting result point press...`);
-        await delay(10000);
-
-        try {
-          await page.waitForSelector("h2.jsx-f1b6ce0373f41d79", { timeout: 10000 });
-          const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79", el => el.innerText);
-          console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
-        } catch (error) {
-          console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⚠️ Unable to fetch points after press.`);
+        if (target) {
+            target.click();
+            return true;
         }
-      } else {
-        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⚠️ 'Press' button not found.`);
-        break;
-      }
-      await delay(10000);
-    }
-
-    console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting before clicking Bank...`);
-    await delay(10000);
-    const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
-      const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
-      if (target) { target.click(); return true; }
-      return false;
+        return false;
     });
 
-    if (bankClicked) {
-      console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🏦 Bank button clicked.`);
-      await delay(10000);
-      const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm", el => el.innerText).catch(() => "Unknown");
-      console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
-      userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
-      console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
-      console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ✅ Daily Roll Complete`);
+    if (pressClicked) {
+        console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🖱️ Press button clicked (${i}/5)`);
+        await delay(10000);
+        console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⏳ Waiting result point press...`);
+        await delay(10000);
+
+        // Tunggu elemen h2 yang berisi total poin muncul
+        try {
+            await page.waitForSelector("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", { timeout: 10000 });
+            const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText);
+            console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
+        } catch (error) {
+            console.log(`${getCurrentTime()} - ⚠️ Elemen hasil poin tidak ditemukan setelah klik Press.`);
+        }
     } else {
-      console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⚠️ 'Bank' button not found.`);
+        console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⚠️ 'Press' button not found.`);
+        break;
     }
 
+    // Delay sebelum klik "Press" berikutnya
+    await delay(10000);
+}
+
+// Delay sebelum klik tombol "Bank"
+console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⏳ Waiting before clicking Bank...`);
+await delay(10000);
+
+// Klik tombol "Bank"
+const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
+    const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
+    if (target) {
+        target.click();
+        return true;
+    }
+    return false;
+});
+
+if (bankClicked) {
+    console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] 🏦 Bank button clicked.`);
+    await delay(10000);
+    
+    // Ambil hasil dice roll
+    const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
+    
+    // Tunggu saldo muncul sebelum mengambil nilai
+    await page.waitForSelector("#creditBalance", { timeout: 10000 }).catch(() => console.log("⚠️ Saldo tidak muncul dalam batas waktu!"));
+    
+    // Ambil saldo setelah dice roll
+    const userCredits = await page.$eval("#creditBalance", el => el.innerText).catch(() => "Unknown");
+    console.log(`${getCurrentTime()} - 💳 Final Balance after dice roll: ${userCredits}`);
+    
+    console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ✅ Daily Roll Complete`);
+} else {
+    console.log(`${getCurrentTime()} - 🔹 [Account ${accountIndex}] ⚠️ 'Bank' button not found.`);
+}
     await browser.close();
   } catch (error) {
     console.error(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ❌ An error occurred:`, error);
