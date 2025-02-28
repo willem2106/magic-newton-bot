@@ -53,34 +53,50 @@ async function runAccount(cookie) {
       });
 
       if (throwDiceClicked) {
-        console.log(`${getCurrentTime()} - ⏳ Waiting for 30 seconds for dice animation...`);
-        await delay(30000);
+        console.log(`${getCurrentTime()} - ⏳ Waiting for 20 seconds for dice animation...`);
+        await delay(20000);
 
         for (let i = 1; i <= 5; i++) {
-          const pressClicked = await page.$$eval("button > div > p", buttons => {
-            const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
-            if (target) { target.click(); return true; }
-            return false;
-          });
-
-          if (pressClicked) {
-            console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(10000);
-
-            try {
-              console.log("Menunggu elemen h2.some-class-name muncul...");
-              await page.waitForSelector("h2.some-class-name", { timeout: 15000 });
-              const currentPoints = await page.$eval("h2.some-class-name", el => el.innerText);
-              console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
-            } catch (error) {
-              console.log(`${getCurrentTime()} - ⚠️ Elemen h2.some-class-name tidak ditemukan dalam batas waktu.`);
-            }
-          } else {
-            console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
-            break;
-          }
-          await delay(10000);
+    // Klik tombol "Press"
+    const pressClicked = await page.$$eval("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", buttons => {
+        const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Press"));
+        if (target) {
+            target.click();
+            return true;
         }
+        return false;
+    });
+
+    if (pressClicked) {
+        console.log(`${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
+
+        // Delay setelah klik tombol "Press" untuk memastikan perubahan nilai
+        await delay(10000);
+
+        // Tambahkan delay sebelum mengambil hasil poin
+        console.log(`${getCurrentTime()} - ⏳ Waiting result point press...`);
+        await delay(10000);
+
+        // Tunggu elemen h2 yang berisi total poin muncul
+        try {
+            await page.waitForSelector("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", { timeout: 10000 });
+            const currentPoints = await page.$eval("h2.jsx-f1b6ce0373f41d79.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText);
+            console.log(`${getCurrentTime()} - 🎯 Current Points after Press (${i}/5): ${currentPoints}`);
+        } catch (error) {
+            console.log(`${getCurrentTime()} - ⚠️ Elemen hasil poin tidak ditemukan setelah klik Press.`);
+        }
+    } else {
+        console.log(`${getCurrentTime()} - ⚠️ 'Press' button not found.`);
+        break;
+    }
+
+    // Delay sebelum klik "Press" berikutnya untuk menghindari klik terlalu cepat
+    await delay(10000);
+}
+
+// Delay setelah 5x klik sebelum klik tombol "Bank"
+console.log(`${getCurrentTime()} - ⏳ Waiting before click Bank...`);
+await delay(10000);
         
      const bankClicked = await page.$$eval("button:nth-child(3) > div > p", buttons => {
           const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Bank"));
@@ -93,7 +109,7 @@ async function runAccount(cookie) {
 
         if (bankClicked) {
           console.log(`${getCurrentTime()} - 🏦 Bank button clicked.`);
-          await delay(3000);
+          await delay(10000);
 
           const diceRollResult = await page.$eval("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", el => el.innerText).catch(() => "Unknown");
           console.log(`${getCurrentTime()} - 🎲 Dice Roll Result: ${diceRollResult} points`);
