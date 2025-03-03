@@ -70,9 +70,9 @@ async function runAccount(cookie, accountIndex) {
 
           if (pressClicked) {
             console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(7000);
+            await delay(9000);
             console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting result point press...`);
-            await delay(7000);
+            await delay(9000);
             
             try {
               await page.waitForSelector("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", { timeout: 10000 });
