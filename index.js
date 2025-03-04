@@ -36,7 +36,7 @@ async function runAccount(cookie, accountIndex) {
       return false;
     });
     if (rollNowClicked) console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ✅ Starting daily roll...`);
-    await delay(5000);
+    await delay(7000);
 
     const letsRollClicked = await page.$$eval("button", buttons => {
       const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Let's roll"));
@@ -46,7 +46,7 @@ async function runAccount(cookie, accountIndex) {
 
     if (letsRollClicked) {
       console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🎲 Rolling the dice...`);
-      await delay(5000);
+      await delay(7000);
       
       const throwDiceClicked = await page.$$eval("button", buttons => {
         const target = buttons.find(btn => btn.innerText && btn.innerText.includes("Throw Dice"));
@@ -55,8 +55,8 @@ async function runAccount(cookie, accountIndex) {
       });
 
       if (throwDiceClicked) {
-        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting for 10 seconds for dice animation...`);
-        await delay(10000);
+        console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting for 20 seconds for dice animation...`);
+        await delay(20000);
 
         for (let i = 1; i <= 5; i++) {
           const pressClicked = await page.$$eval("p.gGRRlH.WrOCw.AEdnq.gTXAMX.gsjAMe", buttons => {
@@ -70,9 +70,9 @@ async function runAccount(cookie, accountIndex) {
 
           if (pressClicked) {
             console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - 🖱️ Press button clicked (${i}/5)`);
-            await delay(9000);
+            await delay(10000);
             console.log(`🔹 [Account ${accountIndex}] ${getCurrentTime()} - ⏳ Waiting result point press...`);
-            await delay(9000);
+            await delay(10000);
             
             try {
               await page.waitForSelector("h2.gRUWXt.dnQMzm.ljNVlj.kzjCbV.dqpYKm.RVUSp.fzpbtJ.bYPzoC", { timeout: 10000 });
